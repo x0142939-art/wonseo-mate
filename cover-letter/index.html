@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2480597092657171" crossorigin="anonymous"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>자소서 작성 도구 - 국내·해외 양식·글자수·맞춤법 검사 | 원서메이트</title>
+<meta name="description" content="국내·해외 자소서 표준 양식으로 글을 쓰고, 실시간 글자수 확인과 무료 맞춤법 검사까지 한 번에. 회원가입 없이 브라우저에서 바로 사용하세요.">
+<meta name="keywords" content="자소서 작성, 자기소개서 양식, 자소서 글자수, 맞춤법 검사, 커버레터, cover letter">
+<link rel="canonical" href="https://wonseo-mate.netlify.app/cover-letter/">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:site_name" content="원서메이트">
+<meta property="og:url" content="https://wonseo-mate.netlify.app/cover-letter/">
+<meta property="og:title" content="자소서 작성 도구 - 국내·해외 양식·글자수·맞춤법 검사">
+<meta property="og:description" content="국내·해외 자소서 표준 양식, 실시간 글자수, 무료 맞춤법 검사를 한 번에 사용하세요.">
+<style>
+  :root{
+    --bg:#f5f6f8;
+    --card:#ffffff;
+    --border:#e2e4e9;
+    --text:#1c1f26;
+    --sub:#6b7280;
+    --accent:#3661f0;
+    --accent-light:#e8edff;
+    --danger:#e0483e;
+    --danger-light:#fdeceb;
+    --ok:#1a9b6c;
+    --ok-light:#e5f7ef;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Segoe UI",Roboto,sans-serif;
+    word-break:keep-all;
+    line-height:1.5;
+    padding:24px 16px 80px;
+  }
+  .wrap{ max-width:760px; margin:0 auto; }
+  header{ margin-bottom:20px; }
+  h1{ font-size:22px; margin:0 0 6px; }
+  header p{ margin:0; color:var(--sub); font-size:14px; }
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:18px;
+    margin-bottom:16px;
+  }
+  .card h2{ font-size:15px; margin:0 0 12px; }
+  .toggle-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  .scale-toggle{
+    display:inline-flex;
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:3px;
+  }
+  .scale-toggle button{
+    border:none;
+    background:transparent;
+    padding:7px 14px;
+    border-radius:8px;
+    font-size:13px;
+    cursor:pointer;
+    color:var(--sub);
+  }
+  .scale-toggle button.active{ background:var(--accent); color:#fff; }
+
+  .item-card{
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:14px;
+    margin-bottom:12px;
+  }
+  .item-head{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:8px;
+    flex-wrap:wrap;
+  }
+  .item-title{
+    flex:1;
+    min-width:120px;
+    font-size:14px;
+    font-weight:700;
+    border:1px solid transparent;
+    border-radius:8px;
+    padding:6px 8px;
+    background:transparent;
+    font-family:inherit;
+  }
+  .item-title:hover, .item-title:focus{
+    border-color:var(--border);
+    background:var(--bg);
+    outline:none;
+  }
+  .item-del{
+    border:none;
+    background:transparent;
+    color:var(--sub);
+    font-size:16px;
+    cursor:pointer;
+    padding:2px 6px;
+  }
+  .item-hint{ font-size:12px; color:var(--sub); margin:0 0 8px; }
+  textarea.item-body{
+    width:100%;
+    min-height:140px;
+    padding:10px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    font-size:14px;
+    font-family:inherit;
+    line-height:1.6;
+    resize:vertical;
+  }
+  .item-footer{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-top:8px;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .item-count{ font-size:12px; color:var(--sub); }
+  .item-count.warn{ color:var(--danger); font-weight:700; }
+  .spell-btn{
+    border:1px solid var(--accent);
+    background:#fff;
+    color:var(--accent);
+    padding:7px 12px;
+    border-radius:8px;
+    font-size:12.5px;
+    cursor:pointer;
+  }
+  .spell-btn:disabled{ opacity:.5; cursor:default; }
+  .spell-result{
+    margin-top:10px;
+    padding:10px;
+    border-radius:8px;
+    background:var(--bg);
+    font-size:12.5px;
+    display:none;
+  }
+  .spell-result.show{ display:block; }
+  .spell-result.ok{ background:var(--ok-light); color:var(--ok); }
+  .spell-result.error{ background:var(--danger-light); color:var(--danger); }
+  .spell-item{ padding:6px 0; border-bottom:1px solid var(--border); }
+  .spell-item:last-child{ border-bottom:none; }
+  .spell-item b{ color:var(--danger); text-decoration:line-through; }
+  .spell-item .arrow{ color:var(--sub); margin:0 4px; }
+  .spell-item .fix{ color:var(--ok); font-weight:700; }
+  .spell-item .info{ display:block; color:var(--sub); font-size:11.5px; margin-top:2px; }
+
+  .add-item-btn{
+    width:100%;
+    padding:10px;
+    border:1px dashed var(--border);
+    border-radius:10px;
+    background:transparent;
+    color:var(--sub);
+    font-size:13px;
+    cursor:pointer;
+  }
+  .add-item-btn:hover{ border-color:var(--accent); color:var(--accent); }
+
+  .storage-note{
+    font-size:12px;
+    color:var(--sub);
+    background:var(--bg);
+    border-radius:10px;
+    padding:12px 14px;
+    margin-bottom:16px;
+  }
+  .company-card{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:8px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:12px;
+    margin-top:8px;
+  }
+  .company-card .company-name{ font-size:14px; font-weight:700; }
+  .company-links{ display:flex; gap:6px; flex-wrap:wrap; }
+  .company-links a{
+    font-size:12px;
+    padding:6px 10px;
+    border-radius:8px;
+    border:1px solid var(--accent);
+    color:var(--accent);
+    text-decoration:none;
+  }
+  .company-links a:hover{ background:var(--accent-light); }
+  .company-empty{ font-size:13px; color:var(--sub); padding:8px 2px; }
+
+  footer.site-footer{
+    max-width:760px;
+    margin:40px auto 0;
+    padding-top:16px;
+    border-top:1px solid var(--border);
+    font-size:12px;
+    color:var(--sub);
+    text-align:center;
+  }
+  footer.site-footer a{ color:var(--sub); }
+  #ad-slot{ margin-bottom:16px; }
+</style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "자소서 작성 도구",
+  "url": "https://wonseo-mate.netlify.app/cover-letter/",
+  "applicationCategory": "UtilityApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "KRW" },
+  "description": "국내·해외 자소서 표준 양식, 글자수 세기, 맞춤법 검사를 지원하는 무료 웹 도구",
+  "inLanguage": "ko"
+}
+</script>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>자소서 작성 도구</h1>
+    <p>국내·해외에서 흔히 쓰는 자소서 항목을 기본값으로 채워드려요. 항목 이름·내용은 자유롭게 바꾸시면 됩니다.</p>
+  </header>
+
+  <div class="storage-note">
+    입력한 내용은 이 브라우저에만 저장돼요. 맞춤법 검사를 누를 때만 해당 항목의 글이 검사 서비스로 전송되고, 그 외에는 어디로도 전송되지 않습니다.
+  </div>
+
+  <div class="card">
+    <h2>회사 정보 빠르게 보기</h2>
+    <p class="item-hint">AI 요약이 아니라, 각 회사가 직접 공개한 채용·인재상 페이지와 최신 뉴스 검색으로 바로 연결해드려요. 아직 등록된 회사가 많지 않아요(대기업·주요 IT 기업 위주).</p>
+    <input type="text" id="companySearch" class="item-title" style="border:1px solid var(--border);background:var(--bg);width:100%;margin-bottom:8px;" placeholder="회사명 검색 (예: 삼성, 카카오, 토스...)">
+    <div id="companyResults"></div>
+  </div>
+
+  <div class="card">
+    <div class="toggle-row">
+      <h2 style="margin:0;">양식 종류</h2>
+      <div class="scale-toggle" id="marketToggle">
+        <button data-market="domestic" class="active">국내형</button>
+        <button data-market="global">해외형</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="items"></div>
+
+  <button class="add-item-btn" id="addItemBtn">+ 항목 추가</button>
+
+  <div class="card" style="margin-top:16px;">
+    <button class="add-item-btn" id="resetBtn" style="border-style:solid;">기본 양식으로 초기화</button>
+  </div>
+
+  <div class="card">
+    <a href="../job-links/" style="text-decoration:none;color:inherit;display:block;">
+      <div style="font-weight:700;font-size:14px;color:var(--accent);">다음 단계 → 지원할 곳 찾기</div>
+      <div style="font-size:13px;color:var(--sub);margin-top:4px;">자소서가 준비됐다면, 채용사이트 모음에서 지원할 곳을 찾아보세요.</div>
+    </a>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div id="ad-slot">
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-2480597092657171"
+         data-ad-slot="5546202613"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </div>
+  <a href="../">원서메이트</a> · © 2026 원서메이트. 무단 복제·재배포·재판매를 금지합니다.
+</footer>
+
+<script>
+(function(){
+  // ── 회사 정보 빠르게 보기 ────────────────────────────────
+  // AI 요약이 아니라, 각 회사가 공개한 채용·인재상 페이지로 연결만 해준다.
+  // 목록은 대기업·주요 IT 기업 위주로 직접 확인해서 골라둔 것이라 많지 않다.
+  var COMPANIES = [
+    { name: "삼성", site: "https://www.samsungcareers.com/", talent: "https://www.samsung.com/sec/about-us/careers/kr/" },
+    { name: "SK", site: "https://www.skcareers.com/", talent: "https://www.sk.co.kr/ko/careers/person.jsp" },
+    { name: "LG", site: "https://careers.lg.com/", talent: "https://www.lge.co.kr/company/recruit/talent" },
+    { name: "현대자동차", site: "https://talent.hyundai.com/", talent: "https://talent.hyundai.com/" },
+    { name: "포스코", site: "https://recruit.posco.com/", talent: "https://recruit.posco.com/" },
+    { name: "카카오", site: "https://careers.kakao.com/", talent: "https://careers.kakao.com/index" },
+    { name: "네이버", site: "https://recruit.navercorp.com/", talent: "https://recruit.navercorp.com/" },
+    { name: "쿠팡", site: "https://www.coupang.jobs/kr/", talent: "https://www.coupang.jobs/kr/" },
+    { name: "토스", site: "https://toss.im/career/jobs", talent: "https://toss.im/career" },
+    { name: "우아한형제들", site: "https://career.woowahan.com/", talent: "https://career.woowahan.com/" }
+  ];
+
+  var companySearchEl = document.getElementById("companySearch");
+  var companyResultsEl = document.getElementById("companyResults");
+
+  function newsSearchUrl(name){
+    return "https://search.naver.com/search.naver?where=news&query=" + encodeURIComponent(name);
+  }
+
+  function renderCompanyResults(query){
+    var q = query.trim();
+    companyResultsEl.innerHTML = "";
+    if(!q) return;
+    var matches = COMPANIES.filter(function(c){ return c.name.indexOf(q) !== -1; });
+    if(!matches.length){
+      companyResultsEl.innerHTML = '<div class="company-empty">아직 등록되지 않은 회사예요. 회사 홈페이지에서 "채용" 또는 "인재상"을 직접 검색해보세요.</div>';
+      return;
+    }
+    matches.forEach(function(c){
+      var div = document.createElement("div");
+      div.className = "company-card";
+      div.innerHTML =
+        '<span class="company-name">' + c.name + '</span>' +
+        '<span class="company-links">' +
+          '<a href="' + c.site + '" target="_blank" rel="noopener noreferrer">공식 채용 사이트</a>' +
+          '<a href="' + c.talent + '" target="_blank" rel="noopener noreferrer">인재상 보기</a>' +
+          '<a href="' + newsSearchUrl(c.name) + '" target="_blank" rel="noopener noreferrer">최신 뉴스 검색</a>' +
+        '</span>';
+      companyResultsEl.appendChild(div);
+    });
+  }
+
+  if(companySearchEl){
+    companySearchEl.addEventListener("input", function(){
+      renderCompanyResults(companySearchEl.value);
+    });
+  }
+
+  var STORAGE_KEY = "cover-letter-state-v1";
+
+  var DEFAULTS = {
+    domestic: [
+      { title: "지원 동기", hint: "권장 500~1000자", body: "" },
+      { title: "성장 과정", hint: "권장 500~1000자", body: "" },
+      { title: "성격의 장단점", hint: "권장 500~800자", body: "" },
+      { title: "입사 후 포부", hint: "권장 500~800자", body: "" }
+    ],
+    global: [
+      { title: "Opening (자기소개·지원 동기)", hint: "권장 50~100 단어", body: "" },
+      { title: "Body (경력·역량 강조)", hint: "권장 150~250 단어", body: "" },
+      { title: "Closing (마무리 인사)", hint: "권장 30~60 단어", body: "" }
+    ]
+  };
+
+  var itemsEl = document.getElementById("items");
+  var marketToggle = document.getElementById("marketToggle");
+  var currentMarket = "domestic";
+  var seq = 0;
+
+  function wordCount(text){
+    var t = text.trim();
+    if(!t) return 0;
+    return t.split(/\s+/).length;
+  }
+
+  function createItem(data, isGlobal){
+    data = data || {};
+    var id = "item" + (seq++);
+    var wrap = document.createElement("div");
+    wrap.className = "item-card";
+    wrap.dataset.id = id;
+    wrap.dataset.global = isGlobal ? "1" : "0";
+    wrap.innerHTML =
+      '<div class="item-head">' +
+        '<input type="text" class="item-title" value="' + (data.title || "").replace(/"/g,"&quot;") + '" placeholder="항목 이름">' +
+        '<button type="button" class="item-del" title="삭제">×</button>' +
+      '</div>' +
+      '<p class="item-hint">' + (data.hint || "") + '</p>' +
+      '<textarea class="item-body" placeholder="내용을 입력하세요">' + (data.body || "") + '</textarea>' +
+      '<div class="item-footer">' +
+        '<span class="item-count"></span>' +
+        (isGlobal ? '' : '<button type="button" class="spell-btn">맞춤법 검사</button>') +
+      '</div>' +
+      '<div class="spell-result"></div>';
+    itemsEl.appendChild(wrap);
+
+    var textarea = wrap.querySelector(".item-body");
+    var countEl = wrap.querySelector(".item-count");
+
+    function updateCount(){
+      var text = textarea.value;
+      if(isGlobal){
+        countEl.textContent = wordCount(text) + " 단어 · " + text.length + "자";
+      } else {
+        countEl.textContent = text.length + "자";
+      }
+    }
+    updateCount();
+    textarea.addEventListener("input", function(){ updateCount(); save(); });
+    wrap.querySelector(".item-title").addEventListener("input", save);
+
+    wrap.querySelector(".item-del").addEventListener("click", function(){
+      wrap.remove();
+      save();
+    });
+
+    var spellBtn = wrap.querySelector(".spell-btn");
+    if(spellBtn){
+      spellBtn.addEventListener("click", function(){
+        runSpellCheck(textarea.value, wrap.querySelector(".spell-result"), spellBtn);
+      });
+    }
+
+    return wrap;
+  }
+
+  function renderMarket(market, items){
+    itemsEl.innerHTML = "";
+    var isGlobal = market === "global";
+    (items || DEFAULTS[market]).forEach(function(d){
+      createItem(d, isGlobal);
+    });
+  }
+
+  function collect(){
+    return Array.prototype.map.call(itemsEl.querySelectorAll(".item-card"), function(el){
+      return {
+        title: el.querySelector(".item-title").value,
+        hint: el.querySelector(".item-hint").textContent,
+        body: el.querySelector(".item-body").value
+      };
+    });
+  }
+
+  function save(){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        market: currentMarket,
+        items: collect()
+      }));
+    }catch(e){}
+  }
+
+  function load(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return false;
+      var data = JSON.parse(raw);
+      currentMarket = data.market === "global" ? "global" : "domestic";
+      setMarketButtons();
+      renderMarket(currentMarket, data.items && data.items.length ? data.items : null);
+      return true;
+    }catch(e){ return false; }
+  }
+
+  function setMarketButtons(){
+    Array.prototype.forEach.call(marketToggle.querySelectorAll("button"), function(btn){
+      btn.classList.toggle("active", btn.dataset.market === currentMarket);
+    });
+  }
+
+  marketToggle.addEventListener("click", function(e){
+    var btn = e.target.closest("button[data-market]");
+    if(!btn) return;
+    currentMarket = btn.dataset.market;
+    setMarketButtons();
+    renderMarket(currentMarket);
+    save();
+  });
+
+  document.getElementById("addItemBtn").addEventListener("click", function(){
+    createItem({ title: "새 항목", hint: "", body: "" }, currentMarket === "global");
+    save();
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", function(){
+    if(!confirm("현재 양식을 기본값으로 되돌릴까요? 작성한 내용이 사라집니다.")) return;
+    renderMarket(currentMarket);
+    save();
+  });
+
+  // ── 맞춤법 검사 (네이버 맞춤법 검사 엔진 비공식 연동, 서버리스 함수 경유) ──
+  function runSpellCheck(text, resultEl, btn){
+    var trimmed = text.trim();
+    if(!trimmed){
+      resultEl.className = "spell-result show error";
+      resultEl.textContent = "검사할 내용을 먼저 입력해주세요.";
+      return;
+    }
+    btn.disabled = true;
+    var originalLabel = btn.textContent;
+    btn.textContent = "검사 중…";
+    resultEl.className = "spell-result show";
+    resultEl.textContent = "맞춤법 검사 중이에요…";
+
+    fetch("/.netlify/functions/spellcheck", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: trimmed })
+    })
+    .then(function(res){ return res.json(); })
+    .then(function(data){
+      btn.disabled = false;
+      btn.textContent = originalLabel;
+      if(data.status !== "ok"){
+        resultEl.className = "spell-result show error";
+        resultEl.textContent = "맞춤법 검사 서비스에 일시적인 문제가 있어요. 잠시 후 다시 시도해주세요.";
+        return;
+      }
+      if(!data.errors || !data.errors.length){
+        resultEl.className = "spell-result show ok";
+        resultEl.textContent = "발견된 맞춤법 문제가 없어요!";
+        return;
+      }
+      resultEl.className = "spell-result show";
+      resultEl.innerHTML = data.errors.map(function(err){
+        var suggestion = (err.suggestions && err.suggestions[0]) || "";
+        return '<div class="spell-item"><b>' + escapeHtml(err.token) + '</b>' +
+          (suggestion ? '<span class="arrow">→</span><span class="fix">' + escapeHtml(suggestion) + '</span>' : '') +
+          (err.info ? '<span class="info">' + escapeHtml(err.info) + '</span>' : '') +
+          '</div>';
+      }).join("");
+    })
+    .catch(function(){
+      btn.disabled = false;
+      btn.textContent = originalLabel;
+      resultEl.className = "spell-result show error";
+      resultEl.textContent = "네트워크 오류로 검사하지 못했어요.";
+    });
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];
+    });
+  }
+
+  if(!load()){
+    renderMarket(currentMarket);
+  }
+})();
+</script>
+</body>
+</html>
