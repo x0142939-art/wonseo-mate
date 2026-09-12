@@ -149,6 +149,16 @@
     cursor:pointer;
   }
   .spell-btn:disabled{ opacity:.5; cursor:default; }
+  .auto-fix-line{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:11.5px;
+    color:var(--sub);
+    margin-top:8px;
+    cursor:pointer;
+  }
+  .auto-fix-line input{ cursor:pointer; }
   .spell-result{
     margin-top:10px;
     padding:10px;
@@ -166,6 +176,11 @@
   .spell-item .arrow{ color:var(--sub); margin:0 4px; }
   .spell-item .fix{ color:var(--ok); font-weight:700; }
   .spell-item .info{ display:block; color:var(--sub); font-size:11.5px; margin-top:2px; }
+  .spell-item.clickable{ cursor:pointer; }
+  .spell-item.clickable:hover{ background:var(--accent-light); border-radius:6px; }
+  .spell-item.applied{ opacity:.45; cursor:default; }
+  .spell-item.applied:hover{ background:none; }
+  .spell-item.applied::after{ content:" · 적용됨"; color:var(--ok); font-weight:700; font-size:11px; margin-left:4px; }
 
   .add-item-btn{
     width:100%;
@@ -393,6 +408,9 @@
         '<span class="item-count"></span>' +
         (isGlobal ? '' : '<button type="button" class="spell-btn">맞춤법 검사</button>') +
       '</div>' +
+      (isGlobal ? '' :
+        '<label class="auto-fix-line"><input type="checkbox" class="auto-fix-check"> 자동으로 바로 수정</label>'
+      ) +
       '<div class="spell-result"></div>';
     itemsEl.appendChild(wrap);
 
@@ -417,9 +435,10 @@
     });
 
     var spellBtn = wrap.querySelector(".spell-btn");
+    var autoFixCheck = wrap.querySelector(".auto-fix-check");
     if(spellBtn){
       spellBtn.addEventListener("click", function(){
-        runSpellCheck(textarea.value, wrap.querySelector(".spell-result"), spellBtn);
+        runSpellCheck(textarea, wrap.querySelector(".spell-result"), spellBtn, autoFixCheck);
       });
     }
 
@@ -492,7 +511,8 @@
   });
 
   // ── 맞춤법 검사 (네이버 맞춤법 검사 엔진 비공식 연동, 서버리스 함수 경유) ──
-  function runSpellCheck(text, resultEl, btn){
+  function runSpellCheck(textarea, resultEl, btn, autoFixCheck){
+    var text = textarea.value;
     var trimmed = text.trim();
     if(!trimmed){
       resultEl.className = "spell-result show error";
@@ -524,14 +544,54 @@
         resultEl.textContent = "발견된 맞춤법 문제가 없어요!";
         return;
       }
+
+      function usableFix(err){
+        var suggestion = err.suggestions && err.suggestions[0];
+        if(!suggestion) return null;
+        if(suggestion === err.token) return null; // 네이버가 교정안을 못 찾은 경우: 원문을 그대로 돌려줌
+        return suggestion;
+      }
+
+      if(autoFixCheck && autoFixCheck.checked){
+        var fixed = textarea.value;
+        var appliedCount = 0;
+        var skippedCount = 0;
+        data.errors.forEach(function(err){
+          var suggestion = usableFix(err);
+          if(!suggestion){ skippedCount++; return; }
+          fixed = fixed.replace(err.token, suggestion);
+          appliedCount++;
+        });
+        textarea.value = fixed;
+        textarea.dispatchEvent(new Event("input", { bubbles: true }));
+        resultEl.className = "spell-result show ok";
+        resultEl.textContent = appliedCount + "건을 자동으로 수정했어요." +
+          (skippedCount ? " (" + skippedCount + "건은 교정 제안이 없어 그대로 뒀어요.)" : "");
+        return;
+      }
+
       resultEl.className = "spell-result show";
-      resultEl.innerHTML = data.errors.map(function(err){
-        var suggestion = (err.suggestions && err.suggestions[0]) || "";
-        return '<div class="spell-item"><b>' + escapeHtml(err.token) + '</b>' +
-          (suggestion ? '<span class="arrow">→</span><span class="fix">' + escapeHtml(suggestion) + '</span>' : '') +
-          (err.info ? '<span class="info">' + escapeHtml(err.info) + '</span>' : '') +
+      resultEl.innerHTML = data.errors.map(function(err, i){
+        var suggestion = usableFix(err);
+        return '<div class="spell-item' + (suggestion ? ' clickable' : '') + '" data-idx="' + i + '">' +
+          '<b>' + escapeHtml(err.token) + '</b>' +
+          (suggestion ? '<span class="arrow">→</span><span class="fix">' + escapeHtml(suggestion) + '</span>' : '<span class="info">교정 제안이 없어요. 직접 확인해주세요.</span>') +
+          (suggestion && err.info ? '<span class="info">' + escapeHtml(err.info) + '</span>' : '') +
           '</div>';
       }).join("");
+
+      Array.prototype.forEach.call(resultEl.querySelectorAll(".spell-item.clickable"), function(item){
+        item.addEventListener("click", function(){
+          if(item.dataset.applied === "1") return;
+          var err = data.errors[Number(item.dataset.idx)];
+          var suggestion = usableFix(err);
+          if(!suggestion) return;
+          textarea.value = textarea.value.replace(err.token, suggestion);
+          textarea.dispatchEvent(new Event("input", { bubbles: true }));
+          item.dataset.applied = "1";
+          item.classList.add("applied");
+        });
+      });
     })
     .catch(function(){
       btn.disabled = false;
