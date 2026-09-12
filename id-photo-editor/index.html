@@ -180,7 +180,7 @@
   }
   #outputPreview{
     max-width:100%;
-    max-height:340px;
+    max-height:480px;
     border-radius:8px;
     border:1px solid var(--border);
     background:#333;
@@ -329,7 +329,7 @@
         <input type="range" id="sharpenRange" min="0" max="100" step="1" value="0">
         <span class="slider-value" id="sharpenValue">0%</span>
       </div>
-      <p class="hint-text">선명도는 아래 "미리보기 &amp; 다운로드" 캔버스와 실제 저장 파일에만 적용돼요. 위쪽 자르기 화면에는 표시되지 않으니 아래에서 확인해주세요.</p>
+      <p class="hint-text">선명도는 위쪽 자르기 화면이 아니라 아래 "미리보기 &amp; 다운로드" 캔버스와 실제 저장 파일에 적용돼요. 윤곽선·눈썹·머리카락 같은 경계 부분을 또렷하게 만드는 효과라 배경처럼 평평한 부분은 크게 안 바뀌어요 — 값을 70~100%까지 올려보면 차이가 잘 보여요.</p>
       <div class="btn-row" style="margin-top:10px;">
         <button class="btn" id="autoEnhanceBtn" type="button">자동 보정 적용</button>
       </div>
@@ -423,7 +423,7 @@
   var offsetX = 0, offsetY = 0;
   var stageW = 320, stageH = 320;
   var dragging = false, dragStartX = 0, dragStartY = 0, dragOrigX = 0, dragOrigY = 0;
-  var bgColor = "#333333";
+  var bgCanvas = null;
   var history = [];
   var originalSnapshot = null;
 
@@ -484,25 +484,16 @@
 
   function updateBgColorFromImage(source){
     try{
-      var size = 32;
-      var c = document.createElement("canvas");
-      c.width = size; c.height = size;
-      var cctx = c.getContext("2d");
-      cctx.drawImage(source, 0, 0, size, size);
-      var edge = cctx.getImageData(0, 0, size, size).data;
-      var r = 0, g = 0, b = 0, n = 0;
-      for(var y = 0; y < size; y++){
-        for(var x = 0; x < size; x++){
-          if(x === 0 || y === 0 || x === size - 1 || y === size - 1){
-            var i = (y * size + x) * 4;
-            r += edge[i]; g += edge[i+1]; b += edge[i+2]; n++;
-          }
-        }
-      }
-      bgColor = "rgb("+Math.round(r/n)+","+Math.round(g/n)+","+Math.round(b/n)+")";
-      stage.style.backgroundColor = bgColor;
+      var tiny = document.createElement("canvas");
+      tiny.width = 24;
+      tiny.height = 24;
+      tiny.getContext("2d").drawImage(source, 0, 0, 24, 24);
+      bgCanvas = tiny;
+      stage.style.backgroundImage = "url(" + tiny.toDataURL("image/png") + ")";
+      stage.style.backgroundSize = "cover";
+      stage.style.backgroundPosition = "center";
     }catch(e){
-      // keep previous bgColor if sampling fails
+      // keep previous bgCanvas/background if sampling fails
     }
   }
 
@@ -956,8 +947,12 @@
     var cx = stageW / 2, cy = stageH / 2;
 
     var ctx = outputPreview.getContext("2d");
-    ctx.fillStyle = bgColor;
-    ctx.fillRect(0, 0, outW, outH);
+    if(bgCanvas){
+      ctx.drawImage(bgCanvas, 0, 0, outW, outH);
+    } else {
+      ctx.fillStyle = "#333333";
+      ctx.fillRect(0, 0, outW, outH);
+    }
     ctx.save();
     ctx.scale(k, k);
     ctx.translate(cx, cy);
@@ -969,7 +964,7 @@
     ctx.restore();
 
     applyAdjustments(ctx, outW, outH);
-    applySharpen(ctx, outW, outH, parseFloat(sharpenRange.value) / 100);
+    applySharpen(ctx, outW, outH, parseFloat(sharpenRange.value) / 100 * 3);
 
     dimNote.textContent = outW + " × " + outH + "px (300dpi 기준 " + mm.w + "×" + mm.h + "mm)";
   }
