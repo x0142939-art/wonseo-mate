@@ -131,16 +131,6 @@
     color:var(--text);
     flex-shrink:0;
   }
-  .checkbox-row{
-    display:flex;
-    align-items:center;
-    gap:8px;
-    font-size:13px;
-    color:var(--text);
-    margin-bottom:4px;
-  }
-  .checkbox-row input{ width:16px; height:16px; }
-
   .btn{
     padding:11px 16px;
     border-radius:10px;
@@ -180,6 +170,23 @@
     font-size:12px;
     color:var(--sub);
     margin-top:6px;
+  }
+  .hint-text{
+    font-size:12px;
+    color:var(--sub);
+    margin:8px 0 0;
+  }
+  .orient-row{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-bottom:12px;
+  }
+  .orient-row .btn{
+    flex:1;
+    min-width:90px;
+    padding:9px 8px;
+    font-size:13px;
   }
   .site-footer{
     max-width:640px;
@@ -243,6 +250,12 @@
         <input type="range" id="zoomRange" min="1" max="3" step="0.01" value="1">
         <span class="slider-value" id="zoomValue">1.00x</span>
       </div>
+      <div class="orient-row">
+        <button class="btn" id="rotateLeftBtn" type="button">⟲ 왼쪽 회전</button>
+        <button class="btn" id="rotateRightBtn" type="button">⟳ 오른쪽 회전</button>
+        <button class="btn" id="flipHBtn" type="button">⇋ 좌우 반전</button>
+        <button class="btn" id="flipVBtn" type="button">⇕ 상하 반전</button>
+      </div>
     </div>
 
     <div class="card">
@@ -267,13 +280,11 @@
         <input type="range" id="hueRange" min="-180" max="180" step="1" value="0">
         <span class="slider-value" id="hueValue">0°</span>
       </div>
-      <div class="checkbox-row">
-        <input type="checkbox" id="autoEnhance">
-        <label for="autoEnhance">자동 보정 (명암 대비를 히스토그램 기준으로 자동 조정)</label>
-      </div>
       <div class="btn-row" style="margin-top:10px;">
-        <button class="btn" id="resetAdjustBtn">보정값 초기화</button>
+        <button class="btn" id="autoEnhanceBtn" type="button">자동 보정 적용</button>
+        <button class="btn" id="resetAdjustBtn" type="button">보정값 초기화</button>
       </div>
+      <p class="hint-text">"자동 보정 적용"을 누르면 사진 전체의 밝고 어두운 정도를 분석해서 대비를 즉시 넓혀줘요. 조명이 흐릿하거나 뿌옇게 나온 사진에 효과적이고, 버튼을 누르는 즉시 적용됩니다. 이미 선명한 사진은 큰 변화가 없을 수 있고, 마음에 안 들면 "보정값 초기화"로 되돌릴 수 있어요.</p>
     </div>
 
     <div class="card">
@@ -334,19 +345,24 @@
   var contrastValue = document.getElementById("contrastValue");
   var saturateValue = document.getElementById("saturateValue");
   var hueValue = document.getElementById("hueValue");
-  var autoEnhance = document.getElementById("autoEnhance");
+  var autoEnhanceBtn = document.getElementById("autoEnhanceBtn");
   var outputPreview = document.getElementById("outputPreview");
   var dimNote = document.getElementById("dimNote");
   var formatSelect = document.getElementById("formatSelect");
   var downloadBtn = document.getElementById("downloadBtn");
   var changePhotoBtn = document.getElementById("changePhotoBtn");
   var resetAdjustBtn = document.getElementById("resetAdjustBtn");
+  var rotateLeftBtn = document.getElementById("rotateLeftBtn");
+  var rotateRightBtn = document.getElementById("rotateRightBtn");
+  var flipHBtn = document.getElementById("flipHBtn");
+  var flipVBtn = document.getElementById("flipVBtn");
 
   var naturalW = 0, naturalH = 0;
   var fitScale = 1, zoom = 1;
   var offsetX = 0, offsetY = 0;
   var stageW = 320, stageH = 320;
   var dragging = false, dragStartX = 0, dragStartY = 0, dragOrigX = 0, dragOrigY = 0;
+  var autoEnhanceOn = false;
 
   function mmToPx(mm){ return Math.round(mm / 25.4 * DPI); }
 
@@ -397,6 +413,43 @@
       "contrast("+contrastRange.value+"%) " +
       "saturate("+saturateRange.value+"%) " +
       "hue-rotate("+hueRange.value+"deg)";
+  }
+
+  function transformStageImage(draw, newW, newH){
+    if(!naturalW) return;
+    var canvas = document.createElement("canvas");
+    canvas.width = newW;
+    canvas.height = newH;
+    var ctx = canvas.getContext("2d");
+    draw(ctx, newW, newH);
+    var dataUrl = canvas.toDataURL("image/png");
+    var img = new Image();
+    img.onload = function(){
+      stageImg.src = dataUrl;
+      naturalW = newW;
+      naturalH = newH;
+      fitImageToStage(false);
+      updateStageFilter();
+    };
+    img.src = dataUrl;
+  }
+
+  function rotateStage(deg){
+    var w = naturalW, h = naturalH;
+    transformStageImage(function(ctx, newW, newH){
+      ctx.translate(newW / 2, newH / 2);
+      ctx.rotate(deg * Math.PI / 180);
+      ctx.drawImage(stageImg, -w / 2, -h / 2, w, h);
+    }, naturalH, naturalW);
+  }
+
+  function flipStage(axis){
+    var w = naturalW, h = naturalH;
+    transformStageImage(function(ctx, newW, newH){
+      ctx.translate(newW / 2, newH / 2);
+      ctx.scale(axis === "h" ? -1 : 1, axis === "v" ? -1 : 1);
+      ctx.drawImage(stageImg, -w / 2, -h / 2, w, h);
+    }, naturalW, naturalH);
   }
 
   function clampOffsets(){
@@ -502,14 +555,23 @@
   bindSlider(contrastRange, contrastValue, "%");
   bindSlider(saturateRange, saturateValue, "%");
   bindSlider(hueRange, hueValue, "°");
-  autoEnhance.addEventListener("change", renderOutput);
+
+  autoEnhanceBtn.addEventListener("click", function(){
+    autoEnhanceOn = true;
+    renderOutput();
+  });
+
+  rotateLeftBtn.addEventListener("click", function(){ rotateStage(-90); });
+  rotateRightBtn.addEventListener("click", function(){ rotateStage(90); });
+  flipHBtn.addEventListener("click", function(){ flipStage("h"); });
+  flipVBtn.addEventListener("click", function(){ flipStage("v"); });
 
   resetAdjustBtn.addEventListener("click", function(){
     brightnessRange.value = 100; brightnessValue.textContent = "100%";
     contrastRange.value = 100; contrastValue.textContent = "100%";
     saturateRange.value = 100; saturateValue.textContent = "100%";
     hueRange.value = 0; hueValue.textContent = "0°";
-    autoEnhance.checked = false;
+    autoEnhanceOn = false;
     updateStageFilter();
     renderOutput();
   });
@@ -642,7 +704,7 @@
     ctx.drawImage(stageImg, sx, sy, sW, sH, 0, 0, outW, outH);
     applyAdjustments(ctx, outW, outH);
 
-    if(autoEnhance.checked){
+    if(autoEnhanceOn){
       autoLevels(ctx, outW, outH);
     }
 
