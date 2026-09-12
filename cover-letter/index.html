@@ -209,6 +209,18 @@
     padding:12px 14px;
     margin-bottom:16px;
   }
+  .refresh-warn{
+    display:flex;
+    gap:6px;
+    align-items:flex-start;
+    font-size:12px;
+    font-weight:600;
+    color:var(--danger);
+    background:var(--danger-light);
+    border-radius:10px;
+    padding:10px 14px;
+    margin-bottom:16px;
+  }
   .company-card{
     display:flex;
     align-items:center;
@@ -268,8 +280,9 @@
   </header>
 
   <div class="storage-note">
-    입력한 내용은 이 브라우저에만 저장돼요. 맞춤법 검사를 누를 때만 해당 항목의 글이 검사 서비스로 전송되고, 그 외에는 어디로도 전송되지 않습니다.
+    입력한 내용은 서버에 저장되지 않고 이 화면에서만 임시로 표시돼요. 맞춤법 검사를 누를 때만 해당 항목의 글이 검사 서비스로 전송되고, 그 외에는 어디로도 전송되지 않습니다.
   </div>
+  <div class="refresh-warn">⚠️ <span>이 사이트는 개인정보 보안을 위해 서버로 내용을 보내지 않습니다. 새로고침하면 작성 중인 내용이 모두 사라지니 주의해주세요.</span></div>
 
   <div class="card">
     <h2>회사 정보 빠르게 보기</h2>
@@ -379,8 +392,6 @@
     });
   }
 
-  var STORAGE_KEY = "cover-letter-state-v1";
-
   var DEFAULTS = {
     domestic: [
       { title: "지원 동기", hint: "권장 500~1000자", body: "" },
@@ -442,12 +453,10 @@
       }
     }
     updateCount();
-    textarea.addEventListener("input", function(){ updateCount(); save(); });
-    wrap.querySelector(".item-title").addEventListener("input", save);
+    textarea.addEventListener("input", updateCount);
 
     wrap.querySelector(".item-del").addEventListener("click", function(){
       wrap.remove();
-      save();
     });
 
     var spellBtn = wrap.querySelector(".spell-btn");
@@ -469,37 +478,6 @@
     });
   }
 
-  function collect(){
-    return Array.prototype.map.call(itemsEl.querySelectorAll(".item-card"), function(el){
-      return {
-        title: el.querySelector(".item-title").value,
-        hint: el.querySelector(".item-hint").textContent,
-        body: el.querySelector(".item-body").value
-      };
-    });
-  }
-
-  function save(){
-    try{
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        market: currentMarket,
-        items: collect()
-      }));
-    }catch(e){}
-  }
-
-  function load(){
-    try{
-      var raw = localStorage.getItem(STORAGE_KEY);
-      if(!raw) return false;
-      var data = JSON.parse(raw);
-      currentMarket = data.market === "global" ? "global" : "domestic";
-      setMarketButtons();
-      renderMarket(currentMarket, data.items && data.items.length ? data.items : null);
-      return true;
-    }catch(e){ return false; }
-  }
-
   function setMarketButtons(){
     Array.prototype.forEach.call(marketToggle.querySelectorAll("button"), function(btn){
       btn.classList.toggle("active", btn.dataset.market === currentMarket);
@@ -512,18 +490,15 @@
     currentMarket = btn.dataset.market;
     setMarketButtons();
     renderMarket(currentMarket);
-    save();
   });
 
   document.getElementById("addItemBtn").addEventListener("click", function(){
     createItem({ title: "새 항목", hint: "", body: "" }, currentMarket === "global");
-    save();
   });
 
   document.getElementById("resetBtn").addEventListener("click", function(){
     if(!confirm("현재 양식을 기본값으로 되돌릴까요? 작성한 내용이 사라집니다.")) return;
     renderMarket(currentMarket);
-    save();
   });
 
   // ── 맞춤법 검사 (네이버 맞춤법 검사 엔진 비공식 연동, 서버리스 함수 경유) ──
@@ -626,9 +601,7 @@
     });
   }
 
-  if(!load()){
-    renderMarket(currentMarket);
-  }
+  renderMarket(currentMarket);
 })();
 </script>
 </body>

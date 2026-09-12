@@ -50,6 +50,18 @@
   header{ margin-bottom:20px; }
   h1{ font-size:22px; margin:0 0 6px; }
   header p{ margin:0; color:var(--sub); font-size:14px; }
+  .refresh-warn{
+    display:flex;
+    gap:6px;
+    align-items:flex-start;
+    font-size:12px;
+    font-weight:600;
+    color:var(--danger);
+    background:var(--danger-light);
+    border-radius:10px;
+    padding:10px 14px;
+    margin-bottom:16px;
+  }
   .card{
     background:var(--card);
     border:1px solid var(--border);
@@ -257,6 +269,8 @@
     <h1>증명사진 보정기</h1>
     <p>사진관에서 받은 사진을 원하는 규격으로 자르고 밝기·대비만 다듬어요. AI 처리 없이 모든 작업은 이 브라우저 안에서만 이뤄지고, 사진은 어디로도 전송되지 않아요.</p>
   </header>
+
+  <div class="refresh-warn">⚠️ <span>이 사이트는 개인정보 보안을 위해 서버로 사진·내용을 보내지 않습니다. 새로고침하면 작업 중인 내용이 모두 사라지니 주의해주세요.</span></div>
 
   <div class="card" id="uploadCard">
     <div id="dropZone">

@@ -39,7 +39,7 @@ async function checkSaramin(text) {
     if (!data || !data.result || !Array.isArray(data.word_list)) return { ok: true, errors: [] };
     const errors = data.word_list.map((w) => ({
       token: w.errorWord,
-      suggestions: String(w.candWordList || "").split("|").map(decodeEntities).filter(Boolean),
+      suggestions: String(w.candWordList || "").split(/[,|]/).map(decodeEntities).filter(Boolean),
       info: decodeEntities(w.helpMessage),
     }));
     return { ok: true, errors };

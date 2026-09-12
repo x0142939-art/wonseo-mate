@@ -456,7 +456,6 @@
   };
   var HS_GRADES = ["1","2","3","4","5","6","7","8","9"];
 
-  var STORAGE_KEY = "gpa-calculator-state-v1";
   var rowsEl = document.getElementById("rows");
   var hsRowsEl = document.getElementById("hsRows");
   var scaleToggle = document.getElementById("scaleToggle");
@@ -587,7 +586,6 @@
     var percent = maxScale > 0 ? (result.gpa / maxScale * 100) : 0;
     document.getElementById("percentValue").textContent = percent.toFixed(1) + "%";
     updateGoal(result);
-    saveState();
   }
 
   function renderHs(){
@@ -598,7 +596,6 @@
     var rounded = result.average > 0 ? Math.round(Math.min(9, Math.max(1, result.average))) : 0;
     document.getElementById("hsRoundedGrade").textContent = rounded > 0 ? (rounded + "등급") : "-";
     updateHsGoal(result);
-    saveState();
   }
 
   function trimNum(n){
@@ -664,57 +661,6 @@
     }
   }
 
-  function saveState(){
-    try{
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        mode: currentMode,
-        scale: currentScale,
-        rows: collectRows(),
-        goalGpa: document.getElementById("goalGpa").value,
-        goalCredits: document.getElementById("goalCredits").value,
-        hsRows: collectHsRows(),
-        hsGoalGrade: document.getElementById("hsGoalGrade").value,
-        hsGoalUnits: document.getElementById("hsGoalUnits").value
-      }));
-    }catch(e){}
-  }
-
-  function load(){
-    var raw;
-    try{
-      raw = localStorage.getItem(STORAGE_KEY);
-    }catch(e){
-      raw = null;
-    }
-    if(!raw){
-      createRow(); createRow(); createRow();
-      createHsRow(); createHsRow(); createHsRow();
-      return;
-    }
-    try{
-      var data = JSON.parse(raw);
-      currentScale = data.scale === "4.3" ? "4.3" : "4.5";
-      currentMode = data.mode === "highschool" ? "highschool" : "university";
-      setScaleButtons();
-      setModeButtons();
-      (data.rows || []).forEach(function(r){ createRow(r); });
-      if(rowsEl.children.length === 0){
-        createRow(); createRow(); createRow();
-      }
-      if(data.goalGpa) document.getElementById("goalGpa").value = data.goalGpa;
-      if(data.goalCredits) document.getElementById("goalCredits").value = data.goalCredits;
-
-      (data.hsRows || []).forEach(function(r){ createHsRow(r); });
-      if(hsRowsEl.children.length === 0){
-        createHsRow(); createHsRow(); createHsRow();
-      }
-      if(data.hsGoalGrade) document.getElementById("hsGoalGrade").value = data.hsGoalGrade;
-      if(data.hsGoalUnits) document.getElementById("hsGoalUnits").value = data.hsGoalUnits;
-    }catch(e){
-      createRow(); createRow(); createRow();
-      createHsRow(); createHsRow(); createHsRow();
-    }
-  }
 
   function setScaleButtons(){
     scaleToggle.querySelectorAll("button").forEach(function(btn){
@@ -752,7 +698,6 @@
     if(!btn) return;
     currentMode = btn.dataset.mode;
     setModeButtons();
-    saveState();
   });
 
   document.getElementById("addRowBtn").addEventListener("click", function(){
@@ -922,7 +867,8 @@
     runOcr(file, document.getElementById("hsOcrStatus"), "0123456789", parseHighschoolOcrText, createHsRow, renderHs);
   });
 
-  load();
+  createRow(); createRow(); createRow();
+  createHsRow(); createHsRow(); createHsRow();
   renderUni();
   renderHs();
 })();
