@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>증명사진 보정기</title>
+<style>
+  :root{
+    --bg:#f5f6f8;
+    --card:#ffffff;
+    --border:#e2e4e9;
+    --text:#1c1f26;
+    --sub:#6b7280;
+    --accent:#3661f0;
+    --accent-light:#e8edff;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Segoe UI",Roboto,sans-serif;
+    word-break:keep-all;
+    line-height:1.5;
+    padding:24px 16px 80px;
+  }
+  .wrap{
+    max-width:640px;
+    margin:0 auto;
+  }
+  header{ margin-bottom:20px; }
+  h1{ font-size:22px; margin:0 0 6px; }
+  header p{ margin:0; color:var(--sub); font-size:14px; }
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:18px;
+    margin-bottom:16px;
+  }
+  .card h2{ font-size:15px; margin:0 0 12px; }
+
+  #dropZone{
+    border:2px dashed var(--border);
+    border-radius:14px;
+    padding:40px 16px;
+    text-align:center;
+    color:var(--sub);
+    cursor:pointer;
+    background:var(--card);
+  }
+  #dropZone.dragover{
+    border-color:var(--accent);
+    background:var(--accent-light);
+    color:var(--accent);
+  }
+  #dropZone strong{ display:block; margin-bottom:6px; color:var(--text); font-size:15px; }
+  #fileInput{ display:none; }
+
+  #editorSection{ display:none; }
+  #editorSection.active{ display:block; }
+
+  .field-row{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:12px;
+  }
+  .field-row label{
+    flex:1;
+    min-width:140px;
+    font-size:13px;
+    color:var(--sub);
+  }
+  select, input[type="text"]{
+    width:100%;
+    margin-top:6px;
+    padding:9px 8px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    font-size:14px;
+    font-family:inherit;
+    background:#fff;
+    color:var(--text);
+  }
+
+  #stage{
+    position:relative;
+    overflow:hidden;
+    margin:0 auto 12px;
+    background:#333;
+    border-radius:10px;
+    touch-action:none;
+    cursor:grab;
+  }
+  #stage:active{ cursor:grabbing; }
+  #stageImg{
+    position:absolute;
+    top:0; left:0;
+    transform-origin:top left;
+    user-select:none;
+    -webkit-user-drag:none;
+    pointer-events:none;
+  }
+  .stage-hint{
+    text-align:center;
+    font-size:12px;
+    color:var(--sub);
+    margin:-4px 0 14px;
+  }
+
+  .slider-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:12px;
+    font-size:13px;
+  }
+  .slider-row .slider-label{
+    width:74px;
+    color:var(--sub);
+    flex-shrink:0;
+  }
+  .slider-row input[type="range"]{
+    flex:1;
+  }
+  .slider-row .slider-value{
+    width:44px;
+    text-align:right;
+    font-variant-numeric:tabular-nums;
+    color:var(--text);
+    flex-shrink:0;
+  }
+  .checkbox-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:13px;
+    color:var(--text);
+    margin-bottom:4px;
+  }
+  .checkbox-row input{ width:16px; height:16px; }
+
+  .btn{
+    padding:11px 16px;
+    border-radius:10px;
+    border:1px solid var(--border);
+    background:#fff;
+    color:var(--text);
+    font-size:14px;
+    cursor:pointer;
+    font-family:inherit;
+  }
+  .btn.primary{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#fff;
+    font-weight:600;
+  }
+  .btn-row{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .btn-row .btn{ flex:1; min-width:120px; }
+
+  #outputPreviewWrap{
+    text-align:center;
+    margin-bottom:14px;
+  }
+  #outputPreview{
+    max-width:100%;
+    max-height:340px;
+    border-radius:8px;
+    border:1px solid var(--border);
+    background:#333;
+  }
+  .dim-note{
+    text-align:center;
+    font-size:12px;
+    color:var(--sub);
+    margin-top:6px;
+  }
+  .site-footer{
+    max-width:640px;
+    margin:24px auto 0;
+    padding-top:16px;
+    border-top:1px solid var(--border);
+    font-size:12px;
+    color:var(--sub);
+    text-align:center;
+  }
+  .site-footer a{ color:var(--sub); }
+  #ad-slot{ display:none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>증명사진 보정기</h1>
+    <p>사진관에서 받은 사진을 원하는 규격으로 자르고 밝기·대비만 다듬어요. AI 처리 없이 모든 작업은 이 브라우저 안에서만 이뤄지고, 사진은 어디로도 전송되지 않아요.</p>
+  </header>
+
+  <div class="card" id="uploadCard">
+    <div id="dropZone">
+      <strong>사진을 드래그하거나 클릭해서 업로드하세요</strong>
+      JPG, PNG 파일 지원
+    </div>
+    <input type="file" id="fileInput" accept="image/*">
+  </div>
+
+  <div id="editorSection">
+    <div class="card">
+      <h2>규격 선택</h2>
+      <div class="field-row">
+        <label>사진 규격
+          <select id="presetSelect">
+            <option value="passport">여권용 (3.5 × 4.5cm)</option>
+            <option value="standard" selected>일반 증명사진 (3 × 4cm)</option>
+            <option value="resume">이력서용 (4 × 5cm)</option>
+            <option value="custom">직접 입력 (mm)</option>
+          </select>
+        </label>
+      </div>
+      <div class="field-row" id="customSizeRow" style="display:none;">
+        <label>가로(mm)
+          <input type="text" id="customW" inputmode="decimal" placeholder="예: 30">
+        </label>
+        <label>세로(mm)
+          <input type="text" id="customH" inputmode="decimal" placeholder="예: 40">
+        </label>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>자르기 &amp; 확대</h2>
+      <div id="stage">
+        <img id="stageImg" alt="">
+      </div>
+      <div class="stage-hint">드래그해서 위치를 옮기고, 슬라이더로 확대/축소하세요</div>
+      <div class="slider-row">
+        <span class="slider-label">확대</span>
+        <input type="range" id="zoomRange" min="1" max="3" step="0.01" value="1">
+        <span class="slider-value" id="zoomValue">1.00x</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>보정</h2>
+      <div class="slider-row">
+        <span class="slider-label">밝기</span>
+        <input type="range" id="brightnessRange" min="50" max="150" step="1" value="100">
+        <span class="slider-value" id="brightnessValue">100%</span>
+      </div>
+      <div class="slider-row">
+        <span class="slider-label">대비</span>
+        <input type="range" id="contrastRange" min="50" max="150" step="1" value="100">
+        <span class="slider-value" id="contrastValue">100%</span>
+      </div>
+      <div class="slider-row">
+        <span class="slider-label">채도</span>
+        <input type="range" id="saturateRange" min="0" max="200" step="1" value="100">
+        <span class="slider-value" id="saturateValue">100%</span>
+      </div>
+      <div class="checkbox-row">
+        <input type="checkbox" id="autoEnhance">
+        <label for="autoEnhance">자동 보정 (명암 대비를 히스토그램 기준으로 자동 조정)</label>
+      </div>
+      <div class="btn-row" style="margin-top:10px;">
+        <button class="btn" id="resetAdjustBtn">보정값 초기화</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>미리보기 &amp; 다운로드</h2>
+      <div id="outputPreviewWrap">
+        <canvas id="outputPreview"></canvas>
+        <div class="dim-note" id="dimNote"></div>
+      </div>
+      <div class="field-row">
+        <label>파일 형식
+          <select id="formatSelect">
+            <option value="image/jpeg">JPG</option>
+            <option value="image/png">PNG</option>
+          </select>
+        </label>
+      </div>
+      <div class="btn-row">
+        <button class="btn" id="changePhotoBtn">다른 사진 선택</button>
+        <button class="btn primary" id="downloadBtn">다운로드</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div id="ad-slot"></div>
+  <a href="../">원서메이트</a> · © 2026 원서메이트. 무단 복제·재배포·재판매를 금지합니다.
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  var PRESETS = {
+    passport: { w: 35, h: 45 },
+    standard: { w: 30, h: 40 },
+    resume:   { w: 40, h: 50 }
+  };
+  var DPI = 300;
+
+  var dropZone = document.getElementById("dropZone");
+  var fileInput = document.getElementById("fileInput");
+  var editorSection = document.getElementById("editorSection");
+  var uploadCard = document.getElementById("uploadCard");
+  var stage = document.getElementById("stage");
+  var stageImg = document.getElementById("stageImg");
+  var presetSelect = document.getElementById("presetSelect");
+  var customSizeRow = document.getElementById("customSizeRow");
+  var customW = document.getElementById("customW");
+  var customH = document.getElementById("customH");
+  var zoomRange = document.getElementById("zoomRange");
+  var zoomValue = document.getElementById("zoomValue");
+  var brightnessRange = document.getElementById("brightnessRange");
+  var contrastRange = document.getElementById("contrastRange");
+  var saturateRange = document.getElementById("saturateRange");
+  var brightnessValue = document.getElementById("brightnessValue");
+  var contrastValue = document.getElementById("contrastValue");
+  var saturateValue = document.getElementById("saturateValue");
+  var autoEnhance = document.getElementById("autoEnhance");
+  var outputPreview = document.getElementById("outputPreview");
+  var dimNote = document.getElementById("dimNote");
+  var formatSelect = document.getElementById("formatSelect");
+  var downloadBtn = document.getElementById("downloadBtn");
+  var changePhotoBtn = document.getElementById("changePhotoBtn");
+  var resetAdjustBtn = document.getElementById("resetAdjustBtn");
+
+  var naturalW = 0, naturalH = 0;
+  var fitScale = 1, zoom = 1;
+  var offsetX = 0, offsetY = 0;
+  var stageW = 320, stageH = 320;
+  var dragging = false, dragStartX = 0, dragStartY = 0, dragOrigX = 0, dragOrigY = 0;
+
+  function mmToPx(mm){ return Math.round(mm / 25.4 * DPI); }
+
+  function currentTargetMm(){
+    if(presetSelect.value === "custom"){
+      var w = parseFloat(customW.value);
+      var h = parseFloat(customH.value);
+      if(!(w > 0) || !(h > 0)) return null;
+      return { w: w, h: h };
+    }
+    return PRESETS[presetSelect.value];
+  }
+
+  function updateStageSize(){
+    var mm = currentTargetMm();
+    if(!mm) return;
+    var ratio = mm.w / mm.h;
+    var maxH = Math.min(360, window.innerWidth - 80);
+    stageH = maxH;
+    stageW = Math.round(stageH * ratio);
+    stage.style.width = stageW + "px";
+    stage.style.height = stageH + "px";
+    if(naturalW) fitImageToStage(true);
+  }
+
+  function fitImageToStage(keepZoom){
+    if(!naturalW) return;
+    fitScale = Math.max(stageW / naturalW, stageH / naturalH);
+    if(!keepZoom) zoom = 1;
+    zoomRange.value = zoom;
+    zoomValue.textContent = zoom.toFixed(2) + "x";
+    offsetX = (stageW - naturalW * fitScale * zoom) / 2;
+    offsetY = (stageH - naturalH * fitScale * zoom) / 2;
+    applyImageTransform();
+    renderOutput();
+  }
+
+  function applyImageTransform(){
+    var scale = fitScale * zoom;
+    stageImg.style.width = naturalW + "px";
+    stageImg.style.height = naturalH + "px";
+    stageImg.style.transform = "translate("+offsetX+"px,"+offsetY+"px) scale("+scale+")";
+  }
+
+  function clampOffsets(){
+    var scale = fitScale * zoom;
+    var dispW = naturalW * scale;
+    var dispH = naturalH * scale;
+    var minX = stageW - dispW;
+    var minY = stageH - dispH;
+    offsetX = Math.min(0, Math.max(minX, offsetX));
+    offsetY = Math.min(0, Math.max(minY, offsetY));
+  }
+
+  function loadFile(file){
+    if(!file || file.type.indexOf("image/") !== 0){
+      alert("이미지 파일만 업로드할 수 있어요.");
+      return;
+    }
+    var reader = new FileReader();
+    reader.onload = function(e){
+      var img = new Image();
+      img.onload = function(){
+        naturalW = img.naturalWidth;
+        naturalH = img.naturalHeight;
+        stageImg.src = e.target.result;
+        uploadCard.style.display = "none";
+        editorSection.classList.add("active");
+        updateStageSize();
+        fitImageToStage(false);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  dropZone.addEventListener("click", function(){ fileInput.click(); });
+  fileInput.addEventListener("change", function(e){
+    if(e.target.files && e.target.files[0]) loadFile(e.target.files[0]);
+  });
+  ["dragenter","dragover"].forEach(function(evt){
+    dropZone.addEventListener(evt, function(e){
+      e.preventDefault();
+      dropZone.classList.add("dragover");
+    });
+  });
+  ["dragleave","drop"].forEach(function(evt){
+    dropZone.addEventListener(evt, function(e){
+      e.preventDefault();
+      dropZone.classList.remove("dragover");
+    });
+  });
+  dropZone.addEventListener("drop", function(e){
+    var file = e.dataTransfer.files && e.dataTransfer.files[0];
+    if(file) loadFile(file);
+  });
+
+  presetSelect.addEventListener("change", function(){
+    customSizeRow.style.display = presetSelect.value === "custom" ? "flex" : "none";
+    updateStageSize();
+    renderOutput();
+  });
+  customW.addEventListener("input", function(){ updateStageSize(); renderOutput(); });
+  customH.addEventListener("input", function(){ updateStageSize(); renderOutput(); });
+
+  zoomRange.addEventListener("input", function(){
+    zoom = parseFloat(zoomRange.value);
+    zoomValue.textContent = zoom.toFixed(2) + "x";
+    clampOffsets();
+    applyImageTransform();
+    renderOutput();
+  });
+
+  stage.addEventListener("pointerdown", function(e){
+    if(!naturalW) return;
+    dragging = true;
+    stage.setPointerCapture(e.pointerId);
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
+    dragOrigX = offsetX;
+    dragOrigY = offsetY;
+  });
+  stage.addEventListener("pointermove", function(e){
+    if(!dragging) return;
+    offsetX = dragOrigX + (e.clientX - dragStartX);
+    offsetY = dragOrigY + (e.clientY - dragStartY);
+    clampOffsets();
+    applyImageTransform();
+  });
+  function endDrag(){
+    if(dragging){ dragging = false; renderOutput(); }
+  }
+  stage.addEventListener("pointerup", endDrag);
+  stage.addEventListener("pointercancel", endDrag);
+
+  function bindSlider(range, valueEl, suffix){
+    range.addEventListener("input", function(){
+      valueEl.textContent = range.value + suffix;
+      renderOutput();
+    });
+  }
+  bindSlider(brightnessRange, brightnessValue, "%");
+  bindSlider(contrastRange, contrastValue, "%");
+  bindSlider(saturateRange, saturateValue, "%");
+  autoEnhance.addEventListener("change", renderOutput);
+
+  resetAdjustBtn.addEventListener("click", function(){
+    brightnessRange.value = 100; brightnessValue.textContent = "100%";
+    contrastRange.value = 100; contrastValue.textContent = "100%";
+    saturateRange.value = 100; saturateValue.textContent = "100%";
+    autoEnhance.checked = false;
+    renderOutput();
+  });
+
+  changePhotoBtn.addEventListener("click", function(){
+    naturalW = 0; naturalH = 0;
+    stageImg.src = "";
+    fileInput.value = "";
+    editorSection.classList.remove("active");
+    uploadCard.style.display = "block";
+  });
+
+  function autoLevels(ctx, w, h){
+    var imgData = ctx.getImageData(0, 0, w, h);
+    var d = imgData.data;
+    var min = 255, max = 0;
+    for(var i = 0; i < d.length; i += 4){
+      var lum = 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
+      if(lum < min) min = lum;
+      if(lum > max) max = lum;
+    }
+    if(max - min < 10) return;
+    var range = max - min;
+    for(var j = 0; j < d.length; j += 4){
+      d[j]   = clamp255((d[j]   - min) * 255 / range);
+      d[j+1] = clamp255((d[j+1] - min) * 255 / range);
+      d[j+2] = clamp255((d[j+2] - min) * 255 / range);
+    }
+    ctx.putImageData(imgData, 0, 0);
+  }
+  function clamp255(v){ return v < 0 ? 0 : (v > 255 ? 255 : v); }
+
+  var renderPending = false;
+  function renderOutput(){
+    if(renderPending) return;
+    renderPending = true;
+    requestAnimationFrame(function(){
+      renderPending = false;
+      doRenderOutput();
+    });
+  }
+
+  function doRenderOutput(){
+    if(!naturalW) return;
+    var mm = currentTargetMm();
+    if(!mm) return;
+    var outW = mmToPx(mm.w);
+    var outH = mmToPx(mm.h);
+    outputPreview.width = outW;
+    outputPreview.height = outH;
+
+    var scale = fitScale * zoom;
+    var sx = -offsetX / scale;
+    var sy = -offsetY / scale;
+    var sW = stageW / scale;
+    var sH = stageH / scale;
+
+    var ctx = outputPreview.getContext("2d");
+    ctx.filter = "brightness("+brightnessRange.value+"%) contrast("+contrastRange.value+"%) saturate("+saturateRange.value+"%)";
+    ctx.drawImage(stageImg, sx, sy, sW, sH, 0, 0, outW, outH);
+    ctx.filter = "none";
+
+    if(autoEnhance.checked){
+      autoLevels(ctx, outW, outH);
+    }
+
+    dimNote.textContent = outW + " × " + outH + "px (300dpi 기준 " + mm.w + "×" + mm.h + "mm)";
+  }
+
+  downloadBtn.addEventListener("click", function(){
+    if(!naturalW) return;
+    var format = formatSelect.value;
+    var ext = format === "image/png" ? "png" : "jpg";
+    var mm = currentTargetMm();
+    var outW = outputPreview.width, outH = outputPreview.height;
+    var dataUrl = outputPreview.toDataURL(format, 0.92);
+    var a = document.createElement("a");
+    a.href = dataUrl;
+    a.download = "증명사진_" + outW + "x" + outH + "." + ext;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  });
+
+  window.addEventListener("resize", function(){
+    if(naturalW){
+      updateStageSize();
+      clampOffsets();
+      applyImageTransform();
+      renderOutput();
+    }
+  });
+})();
+</script>
+</body>
+</html>

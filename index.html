@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>원서메이트</title>
+<style>
+  :root{
+    --bg:#f5f6f8;
+    --card:#ffffff;
+    --border:#e2e4e9;
+    --text:#1c1f26;
+    --sub:#6b7280;
+    --accent:#3661f0;
+    --accent-light:#e8edff;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Segoe UI",Roboto,sans-serif;
+    word-break:keep-all;
+    line-height:1.5;
+    padding:24px 16px 80px;
+  }
+  .wrap{
+    max-width:640px;
+    margin:0 auto;
+  }
+  header{ margin-bottom:24px; }
+  h1{ font-size:26px; margin:0 0 8px; }
+  header p{ margin:0; color:var(--sub); font-size:14px; }
+
+  .tool-grid{
+    display:grid;
+    gap:14px;
+  }
+  .tool-card{
+    display:block;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:20px;
+    text-decoration:none;
+    color:inherit;
+  }
+  .tool-card:hover{
+    border-color:var(--accent);
+    background:var(--accent-light);
+  }
+  .tool-card .icon{
+    font-size:26px;
+    margin-bottom:10px;
+  }
+  .tool-card h2{
+    font-size:17px;
+    margin:0 0 6px;
+    color:var(--text);
+  }
+  .tool-card p{
+    margin:0;
+    font-size:13px;
+    color:var(--sub);
+  }
+
+  footer{
+    max-width:640px;
+    margin:40px auto 0;
+    padding-top:16px;
+    border-top:1px solid var(--border);
+    font-size:12px;
+    color:var(--sub);
+    text-align:center;
+  }
+  #ad-slot{ display:none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>원서메이트</h1>
+    <p>취업 준비에 필요한 작은 도구들을 모아뒀어요. 모든 처리는 브라우저 안에서만 이뤄지고, 어떤 데이터도 서버로 전송되지 않아요.</p>
+  </header>
+
+  <div class="tool-grid">
+    <a class="tool-card" href="./gpa-calculator/">
+      <div class="icon">🎓</div>
+      <h2>학점 계산기</h2>
+      <p>대학 학점(GPA)과 고등학교 내신 등급을 계산하고, 목표 점수를 위해 필요한 평균도 알려드려요.</p>
+    </a>
+    <a class="tool-card" href="./id-photo-editor/">
+      <div class="icon">🪪</div>
+      <h2>증명사진 보정기</h2>
+      <p>사진관에서 받은 사진을 여권·증명사진·이력서용 규격에 맞게 자르고 밝기·대비를 다듬어요.</p>
+    </a>
+  </div>
+
+  <footer>
+    <div id="ad-slot"></div>
+    © 2026 원서메이트. 무단 복제·재배포·재판매를 금지합니다.
+  </footer>
+</div>
+</body>
+</html>
