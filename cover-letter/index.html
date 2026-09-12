@@ -368,10 +368,10 @@
   }
 
   function renderCompanyResults(query){
-    var q = query.trim();
+    var q = query.trim().toLowerCase();
     companyResultsEl.innerHTML = "";
     if(!q) return;
-    var matches = COMPANIES.filter(function(c){ return c.name.indexOf(q) !== -1; });
+    var matches = COMPANIES.filter(function(c){ return c.name.toLowerCase().indexOf(q) !== -1; });
     if(!matches.length){
       companyResultsEl.innerHTML = '<div class="company-empty">아직 등록되지 않은 회사예요. 회사 홈페이지에서 "채용" 또는 "인재상"을 직접 검색해보세요.</div>';
       return;
