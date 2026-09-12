@@ -32,6 +32,8 @@
     --danger-light:#fdeceb;
     --ok:#1a9b6c;
     --ok-light:#e5f7ef;
+    --guess:#b5740a;
+    --guess-light:#fdf2e0;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
@@ -181,6 +183,9 @@
   .spell-item.applied{ opacity:.45; cursor:default; }
   .spell-item.applied:hover{ background:none; }
   .spell-item.applied::after{ content:" · 적용됨"; color:var(--ok); font-weight:700; font-size:11px; margin-left:4px; }
+  .spell-item.guessed .fix{ color:var(--guess); }
+  .spell-item.guessed:hover{ background:var(--guess-light); }
+  .guess-badge{ display:inline-block; margin-left:5px; padding:1px 5px; border-radius:5px; background:var(--guess-light); color:var(--guess); font-size:10.5px; font-weight:700; vertical-align:1px; }
 
   .add-item-btn{
     width:100%;
@@ -555,17 +560,19 @@
       if(autoFixCheck && autoFixCheck.checked){
         var fixed = textarea.value;
         var appliedCount = 0;
+        var guessedCount = 0;
         var skippedCount = 0;
         data.errors.forEach(function(err){
           var suggestion = usableFix(err);
           if(!suggestion){ skippedCount++; return; }
           fixed = fixed.replace(err.token, suggestion);
-          appliedCount++;
+          if(err.guessed){ guessedCount++; } else { appliedCount++; }
         });
         textarea.value = fixed;
         textarea.dispatchEvent(new Event("input", { bubbles: true }));
         resultEl.className = "spell-result show ok";
         resultEl.textContent = appliedCount + "건을 자동으로 수정했어요." +
+          (guessedCount ? " (그중 " + guessedCount + "건은 사전 기반 추정 교정이니 한 번 확인해주세요.)" : "") +
           (skippedCount ? " (" + skippedCount + "건은 교정 제안이 없어 그대로 뒀어요.)" : "");
         return;
       }
@@ -573,10 +580,11 @@
       resultEl.className = "spell-result show";
       resultEl.innerHTML = data.errors.map(function(err, i){
         var suggestion = usableFix(err);
-        return '<div class="spell-item' + (suggestion ? ' clickable' : '') + '" data-idx="' + i + '">' +
+        return '<div class="spell-item' + (suggestion ? ' clickable' : '') + (err.guessed ? ' guessed' : '') + '" data-idx="' + i + '">' +
           '<b>' + escapeHtml(err.token) + '</b>' +
-          (suggestion ? '<span class="arrow">→</span><span class="fix">' + escapeHtml(suggestion) + '</span>' : '<span class="info">교정 제안이 없어요. 직접 확인해주세요.</span>') +
-          (suggestion && err.info ? '<span class="info">' + escapeHtml(err.info) + '</span>' : '') +
+          (suggestion ? '<span class="arrow">→</span><span class="fix">' + escapeHtml(suggestion) + '</span>' + (err.guessed ? '<span class="guess-badge">사전 추정</span>' : '') : '<span class="info">교정 제안이 없어요. 직접 확인해주세요.</span>') +
+          (suggestion && err.info && !err.guessed ? '<span class="info">' + escapeHtml(err.info) + '</span>' : '') +
+          (suggestion && err.guessed ? '<span class="info">국어사전에서 가장 비슷한 단어를 추정한 거예요. 문맥에 맞는지 확인해주세요.</span>' : '') +
           '</div>';
       }).join("");
 

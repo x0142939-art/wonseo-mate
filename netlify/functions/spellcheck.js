@@ -1,11 +1,29 @@
-// 맞춤법 검사 — 네이버+다음 맞춤법 검사 엔진을 같이 호출하는 hanspell 라이브러리를 감싼 서버리스 함수.
-// 둘 다 AI가 아니고 비용도 없지만, 공식 API가 아니라 예고 없이 끊길 수 있음.
-// 두 엔진을 같이 써서 한쪽이 놓친 오류를 다른 쪽이 잡아주거나, 한쪽이 막혀도 나머지 결과는 돌려줄 수 있게 함.
-// (부산대 맞춤법 검사기도 검토했으나, 백엔드(nara-speller.co.kr)가 Cloudflare 봇 차단으로 서버 간 호출을 막아두어 연동 불가.)
+// 맞춤법 검사 — 네이버+다음(hanspell, 문맥/통계 기반) + Hunspell(사전 기반, 오프라인) 3중 검사.
+// 네이버·다음은 "안/않, 되/돼, 던지/든지"처럼 문맥상 틀린 표현을 잘 잡지만, 공식 API가 아니라 예고 없이 끊길 수 있고
+// 너무 심하게 뭉개진 글자는 교정안 자체를 못 내놓을 때가 있음(이 경우 token과 suggestion이 같게 돌아옴).
+// 그럴 때 Hunspell(오픈소스 한국어 사전, 파이어폭스/리브레오피스가 쓰는 것과 같은 엔진)로 한 번 더 사전에서
+// 가장 가까운 단어를 찾아봄 — 네트워크 호출 없이 서버에 내장된 사전으로 동작해서 끊길 일이 없음.
+// 다만 Hunspell은 "사전에 있는 단어인가"만 보므로 문맥은 모름 — 그래서 이 추정은 "guessed"로 표시해 구분함.
 const { spellCheckByNAVER, spellCheckByDAUM } = require("hanspell");
+const { loadModule } = require("hunspell-asm");
+const fs = require("fs");
+const path = require("path");
 
 const MAX_LENGTH = 3000;
 const TIMEOUT_MS = 8000;
+
+let hunspellPromise = null;
+function getHunspell() {
+  if (!hunspellPromise) {
+    hunspellPromise = loadModule().then((factory) => {
+      const dictDir = path.dirname(require.resolve("dictionary-ko"));
+      const affPath = factory.mountBuffer(fs.readFileSync(path.join(dictDir, "index.aff")), "ko.aff");
+      const dicPath = factory.mountBuffer(fs.readFileSync(path.join(dictDir, "index.dic")), "ko.dic");
+      return factory.create(affPath, dicPath);
+    });
+  }
+  return hunspellPromise;
+}
 
 function checkWith(fn, text) {
   return new Promise((resolve) => {
@@ -68,6 +86,27 @@ exports.handler = async (event) => {
     });
   });
   errors.sort((a, b) => text.indexOf(a.token) - text.indexOf(b.token));
+
+  // 네이버·다음이 교정안을 못 내놓은 항목(suggestion===token)은 공백 없는 단어에 한해
+  // Hunspell 사전에서 가장 가까운 단어를 찾아 "추정 교정"으로 보충함.
+  const needsGuess = errors.filter((err) => {
+    const suggestion = err.suggestions && err.suggestions[0];
+    return (!suggestion || suggestion === err.token) && !/\s/.test(err.token);
+  });
+  if (needsGuess.length) {
+    try {
+      const hunspell = await getHunspell();
+      needsGuess.forEach((err) => {
+        const guesses = hunspell.suggest(err.token);
+        if (guesses.length) {
+          err.suggestions = [guesses[0]];
+          err.guessed = true;
+        }
+      });
+    } catch (e) {
+      // Hunspell 로딩 실패해도 기존 결과는 그대로 반환
+    }
+  }
 
   return jsonResponse(200, { status: "ok", errors });
 };

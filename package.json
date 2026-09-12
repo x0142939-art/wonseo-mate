@@ -3,6 +3,8 @@
   "private": true,
   "description": "원서메이트 — 취준생을 위한 무료 웹 도구 모음. 정적 페이지 + 맞춤법 검사용 Netlify Functions.",
   "dependencies": {
-    "hanspell": "^1.0.1"
+    "dictionary-ko": "^2.0.0",
+    "hanspell": "^1.0.1",
+    "hunspell-asm": "^4.0.2"
   }
 }
