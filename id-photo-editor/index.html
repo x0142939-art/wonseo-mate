@@ -250,6 +250,11 @@
         <input type="range" id="zoomRange" min="1" max="3" step="0.01" value="1">
         <span class="slider-value" id="zoomValue">1.00x</span>
       </div>
+      <div class="slider-row">
+        <span class="slider-label">기울기</span>
+        <input type="range" id="tiltRange" min="-15" max="15" step="0.5" value="0">
+        <span class="slider-value" id="tiltValue">0.0°</span>
+      </div>
       <div class="orient-row">
         <button class="btn" id="rotateLeftBtn" type="button">⟲ 왼쪽 회전</button>
         <button class="btn" id="rotateRightBtn" type="button">⟳ 오른쪽 회전</button>
@@ -280,11 +285,17 @@
         <input type="range" id="hueRange" min="-180" max="180" step="1" value="0">
         <span class="slider-value" id="hueValue">0°</span>
       </div>
+      <div class="slider-row">
+        <span class="slider-label">선명도</span>
+        <input type="range" id="sharpenRange" min="0" max="100" step="1" value="0">
+        <span class="slider-value" id="sharpenValue">0%</span>
+      </div>
+      <p class="hint-text">선명도는 아래 "미리보기 &amp; 다운로드" 캔버스와 실제 저장 파일에만 적용돼요. 위쪽 자르기 화면에는 표시되지 않으니 아래에서 확인해주세요.</p>
       <div class="btn-row" style="margin-top:10px;">
         <button class="btn" id="autoEnhanceBtn" type="button">자동 보정 적용</button>
         <button class="btn" id="resetAdjustBtn" type="button">보정값 초기화</button>
       </div>
-      <p class="hint-text">"자동 보정 적용"을 누르면 사진 전체의 밝고 어두운 정도를 분석해서 대비를 즉시 넓혀줘요. 조명이 흐릿하거나 뿌옇게 나온 사진에 효과적이고, 버튼을 누르는 즉시 적용됩니다. 이미 선명한 사진은 큰 변화가 없을 수 있고, 마음에 안 들면 "보정값 초기화"로 되돌릴 수 있어요.</p>
+      <p class="hint-text">"자동 보정 적용"을 누르면 사진 전체의 밝고 어두운 정도를 분석해서 대비를 즉시 넓혀줘요 (회전·반전처럼 사진에 바로, 영구적으로 반영됩니다). 조명이 흐릿하거나 뿌옇게 나온 사진에 효과적이고, 이미 선명한 사진은 큰 변화가 없을 수 있어요. 마음에 안 들면 "다른 사진 선택"으로 원본을 다시 올려서 시작할 수 있어요.</p>
     </div>
 
     <div class="card">
@@ -337,14 +348,18 @@
   var customH = document.getElementById("customH");
   var zoomRange = document.getElementById("zoomRange");
   var zoomValue = document.getElementById("zoomValue");
+  var tiltRange = document.getElementById("tiltRange");
+  var tiltValue = document.getElementById("tiltValue");
   var brightnessRange = document.getElementById("brightnessRange");
   var contrastRange = document.getElementById("contrastRange");
   var saturateRange = document.getElementById("saturateRange");
   var hueRange = document.getElementById("hueRange");
+  var sharpenRange = document.getElementById("sharpenRange");
   var brightnessValue = document.getElementById("brightnessValue");
   var contrastValue = document.getElementById("contrastValue");
   var saturateValue = document.getElementById("saturateValue");
   var hueValue = document.getElementById("hueValue");
+  var sharpenValue = document.getElementById("sharpenValue");
   var autoEnhanceBtn = document.getElementById("autoEnhanceBtn");
   var outputPreview = document.getElementById("outputPreview");
   var dimNote = document.getElementById("dimNote");
@@ -362,7 +377,6 @@
   var offsetX = 0, offsetY = 0;
   var stageW = 320, stageH = 320;
   var dragging = false, dragStartX = 0, dragStartY = 0, dragOrigX = 0, dragOrigY = 0;
-  var autoEnhanceOn = false;
 
   function mmToPx(mm){ return Math.round(mm / 25.4 * DPI); }
 
@@ -402,9 +416,13 @@
 
   function applyImageTransform(){
     var scale = fitScale * zoom;
+    var tiltDeg = parseFloat(tiltRange.value) || 0;
+    var cx = stageW / 2, cy = stageH / 2;
     stageImg.style.width = naturalW + "px";
     stageImg.style.height = naturalH + "px";
-    stageImg.style.transform = "translate("+offsetX+"px,"+offsetY+"px) scale("+scale+")";
+    stageImg.style.transform =
+      "translate("+cx+"px,"+cy+"px) rotate("+tiltDeg+"deg) translate("+(-cx)+"px,"+(-cy)+"px) " +
+      "translate("+offsetX+"px,"+offsetY+"px) scale("+scale+")";
   }
 
   function updateStageFilter(){
@@ -430,6 +448,25 @@
       naturalH = newH;
       fitImageToStage(false);
       updateStageFilter();
+    };
+    img.src = dataUrl;
+  }
+
+  function bakeCurrentImage(process){
+    if(!naturalW) return;
+    var canvas = document.createElement("canvas");
+    canvas.width = naturalW;
+    canvas.height = naturalH;
+    var ctx = canvas.getContext("2d");
+    ctx.drawImage(stageImg, 0, 0, naturalW, naturalH);
+    process(ctx, naturalW, naturalH);
+    var dataUrl = canvas.toDataURL("image/png");
+    var img = new Image();
+    img.onload = function(){
+      stageImg.src = dataUrl;
+      applyImageTransform();
+      updateStageFilter();
+      renderOutput();
     };
     img.src = dataUrl;
   }
@@ -522,6 +559,12 @@
     renderOutput();
   });
 
+  tiltRange.addEventListener("input", function(){
+    tiltValue.textContent = parseFloat(tiltRange.value).toFixed(1) + "°";
+    applyImageTransform();
+    renderOutput();
+  });
+
   stage.addEventListener("pointerdown", function(e){
     if(!naturalW) return;
     dragging = true;
@@ -556,9 +599,13 @@
   bindSlider(saturateRange, saturateValue, "%");
   bindSlider(hueRange, hueValue, "°");
 
-  autoEnhanceBtn.addEventListener("click", function(){
-    autoEnhanceOn = true;
+  sharpenRange.addEventListener("input", function(){
+    sharpenValue.textContent = sharpenRange.value + "%";
     renderOutput();
+  });
+
+  autoEnhanceBtn.addEventListener("click", function(){
+    bakeCurrentImage(function(ctx, w, h){ autoLevels(ctx, w, h); });
   });
 
   rotateLeftBtn.addEventListener("click", function(){ rotateStage(-90); });
@@ -571,7 +618,7 @@
     contrastRange.value = 100; contrastValue.textContent = "100%";
     saturateRange.value = 100; saturateValue.textContent = "100%";
     hueRange.value = 0; hueValue.textContent = "0°";
-    autoEnhanceOn = false;
+    sharpenRange.value = 0; sharpenValue.textContent = "0%";
     updateStageFilter();
     renderOutput();
   });
@@ -587,22 +634,51 @@
   function autoLevels(ctx, w, h){
     var imgData = ctx.getImageData(0, 0, w, h);
     var d = imgData.data;
-    var min = 255, max = 0;
+    var hist = new Array(256).fill(0);
+    var total = 0;
     for(var i = 0; i < d.length; i += 4){
-      var lum = 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
-      if(lum < min) min = lum;
-      if(lum > max) max = lum;
+      var lum = Math.round(0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2]);
+      hist[lum]++;
+      total++;
     }
-    if(max - min < 10) return;
-    var range = max - min;
+    var clip = total * 0.01;
+    var low = 0, accLow = 0;
+    while(low < 255 && accLow < clip){ accLow += hist[low]; low++; }
+    var high = 255, accHigh = 0;
+    while(high > 0 && accHigh < clip){ accHigh += hist[high]; high--; }
+    if(high - low < 10) return;
+    var range = high - low;
     for(var j = 0; j < d.length; j += 4){
-      d[j]   = clamp255((d[j]   - min) * 255 / range);
-      d[j+1] = clamp255((d[j+1] - min) * 255 / range);
-      d[j+2] = clamp255((d[j+2] - min) * 255 / range);
+      d[j]   = clamp255((d[j]   - low) * 255 / range);
+      d[j+1] = clamp255((d[j+1] - low) * 255 / range);
+      d[j+2] = clamp255((d[j+2] - low) * 255 / range);
     }
     ctx.putImageData(imgData, 0, 0);
   }
   function clamp255(v){ return v < 0 ? 0 : (v > 255 ? 255 : v); }
+
+  function applySharpen(ctx, w, h, amount){
+    if(!(amount > 0)) return;
+    var imgData = ctx.getImageData(0, 0, w, h);
+    var src = imgData.data;
+    var out = new Uint8ClampedArray(src);
+    var idx = function(x, y){ return (y * w + x) * 4; };
+    for(var y = 1; y < h - 1; y++){
+      for(var x = 1; x < w - 1; x++){
+        var i = idx(x, y);
+        for(var c = 0; c < 3; c++){
+          var center = src[i + c];
+          var up = src[idx(x, y - 1) + c];
+          var down = src[idx(x, y + 1) + c];
+          var left = src[idx(x - 1, y) + c];
+          var right = src[idx(x + 1, y) + c];
+          out[i + c] = clamp255(center * (1 + 4 * amount) - amount * (up + down + left + right));
+        }
+      }
+    }
+    imgData.data.set(out);
+    ctx.putImageData(imgData, 0, 0);
+  }
 
   function rgbToHsl(r, g, b){
     r /= 255; g /= 255; b /= 255;
@@ -695,18 +771,23 @@
     outputPreview.height = outH;
 
     var scale = fitScale * zoom;
-    var sx = -offsetX / scale;
-    var sy = -offsetY / scale;
-    var sW = stageW / scale;
-    var sH = stageH / scale;
+    var tiltDeg = parseFloat(tiltRange.value) || 0;
+    var k = outW / stageW;
+    var cx = stageW / 2, cy = stageH / 2;
 
     var ctx = outputPreview.getContext("2d");
-    ctx.drawImage(stageImg, sx, sy, sW, sH, 0, 0, outW, outH);
-    applyAdjustments(ctx, outW, outH);
+    ctx.save();
+    ctx.scale(k, k);
+    ctx.translate(cx, cy);
+    ctx.rotate(tiltDeg * Math.PI / 180);
+    ctx.translate(-cx, -cy);
+    ctx.translate(offsetX, offsetY);
+    ctx.scale(scale, scale);
+    ctx.drawImage(stageImg, 0, 0, naturalW, naturalH);
+    ctx.restore();
 
-    if(autoEnhanceOn){
-      autoLevels(ctx, outW, outH);
-    }
+    applyAdjustments(ctx, outW, outH);
+    applySharpen(ctx, outW, outH, parseFloat(sharpenRange.value) / 100);
 
     dimNote.textContent = outW + " × " + outH + "px (300dpi 기준 " + mm.w + "×" + mm.h + "mm)";
   }
