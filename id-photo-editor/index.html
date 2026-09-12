@@ -96,14 +96,13 @@
     cursor:grab;
   }
   #stage:active{ cursor:grabbing; }
-  #stageImg{
-    position:absolute;
-    top:0; left:0;
-    transform-origin:top left;
-    user-select:none;
-    -webkit-user-drag:none;
-    pointer-events:none;
+  #stageCanvas{
+    display:block;
+    width:100%;
+    height:100%;
+    touch-action:none;
   }
+  #stageImg{ display:none; }
   .stage-hint{
     text-align:center;
     font-size:12px;
@@ -250,7 +249,7 @@
         <button class="btn primary" id="applyResetBtn" type="button">선택 항목 초기화</button>
         <button class="btn" id="cancelResetBtn" type="button">취소</button>
       </div>
-      <p class="hint-text">회전·반전·자동 보정처럼 사진에 직접 반영된 편집은 위 항목으로는 되돌릴 수 없어요. 그럴 땐 "되돌리기"를 누르거나, 아래에서 원본으로 되돌리세요.</p>
+      <p class="hint-text">회전·반전처럼 사진에 직접 반영된 편집은 위 항목으로는 되돌릴 수 없어요. 그럴 땐 "되돌리기"를 누르거나, 아래에서 원본으로 되돌리세요.</p>
       <div class="btn-row">
         <button class="btn danger" id="revertOriginalBtn" type="button">원본 사진으로 되돌리기</button>
       </div>
@@ -281,6 +280,7 @@
     <div class="card">
       <h2>자르기 &amp; 확대</h2>
       <div id="stage">
+        <canvas id="stageCanvas"></canvas>
         <img id="stageImg" alt="">
       </div>
       <div class="stage-hint">드래그해서 위치를 옮기고, 슬라이더로 확대/축소하세요</div>
@@ -329,11 +329,11 @@
         <input type="range" id="sharpenRange" min="0" max="100" step="1" value="0">
         <span class="slider-value" id="sharpenValue">0%</span>
       </div>
-      <p class="hint-text">선명도는 위쪽 자르기 화면이 아니라 아래 "미리보기 &amp; 다운로드" 캔버스와 실제 저장 파일에 적용돼요. 윤곽선·눈썹·머리카락 같은 경계 부분을 또렷하게 만드는 효과라 배경처럼 평평한 부분은 크게 안 바뀌어요 — 값을 70~100%까지 올려보면 차이가 잘 보여요.</p>
+      <p class="hint-text">윤곽선·눈썹·머리카락 같은 경계 부분을 또렷하게 만드는 효과라 배경처럼 평평한 부분은 크게 안 바뀌어요 — 값을 70~100%까지 올려보면 차이가 잘 보여요.</p>
       <div class="btn-row" style="margin-top:10px;">
         <button class="btn" id="autoEnhanceBtn" type="button">자동 보정 적용</button>
       </div>
-      <p class="hint-text">"자동 보정 적용"을 누르면 사진 전체의 밝고 어두운 정도를 분석해서 대비를 즉시 넓혀줘요 (회전·반전처럼 사진에 바로 반영됩니다). 조명이 흐릿하거나 뿌옇게 나온 사진에 효과적이고, 이미 선명한 사진은 큰 변화가 없을 수 있어요. 마음에 안 들면 상단의 "되돌리기"를 누르세요.</p>
+      <p class="hint-text">"자동 보정 적용"을 누르면 사진을 분석해서 위 밝기·대비 슬라이더가 알맞은 값으로 자동으로 움직여요. 조명이 흐릿하거나 뿌옇게 나온 사진에 효과적이고, 이미 선명한 사진은 슬라이더가 거의 그대로일 수 있어요. 마음에 안 들면 슬라이더를 다시 조절하거나 상단 "초기화"를 사용하세요.</p>
     </div>
 
     <div class="card">
@@ -379,6 +379,7 @@
   var editorSection = document.getElementById("editorSection");
   var uploadCard = document.getElementById("uploadCard");
   var stage = document.getElementById("stage");
+  var stageCanvas = document.getElementById("stageCanvas");
   var stageImg = document.getElementById("stageImg");
   var presetSelect = document.getElementById("presetSelect");
   var customSizeRow = document.getElementById("customSizeRow");
@@ -423,7 +424,6 @@
   var offsetX = 0, offsetY = 0;
   var stageW = 320, stageH = 320;
   var dragging = false, dragStartX = 0, dragStartY = 0, dragOrigX = 0, dragOrigY = 0;
-  var bgCanvas = null;
   var history = [];
   var originalSnapshot = null;
 
@@ -459,42 +459,7 @@
     zoomValue.textContent = zoom.toFixed(2) + "x";
     offsetX = (stageW - naturalW * fitScale * zoom) / 2;
     offsetY = (stageH - naturalH * fitScale * zoom) / 2;
-    applyImageTransform();
     renderOutput();
-  }
-
-  function applyImageTransform(){
-    var scale = fitScale * zoom;
-    var tiltDeg = parseFloat(tiltRange.value) || 0;
-    var cx = stageW / 2, cy = stageH / 2;
-    stageImg.style.width = naturalW + "px";
-    stageImg.style.height = naturalH + "px";
-    stageImg.style.transform =
-      "translate("+cx+"px,"+cy+"px) rotate("+tiltDeg+"deg) translate("+(-cx)+"px,"+(-cy)+"px) " +
-      "translate("+offsetX+"px,"+offsetY+"px) scale("+scale+")";
-  }
-
-  function updateStageFilter(){
-    stageImg.style.filter =
-      "brightness("+brightnessRange.value+"%) " +
-      "contrast("+contrastRange.value+"%) " +
-      "saturate("+saturateRange.value+"%) " +
-      "hue-rotate("+hueRange.value+"deg)";
-  }
-
-  function updateBgColorFromImage(source){
-    try{
-      var tiny = document.createElement("canvas");
-      tiny.width = 24;
-      tiny.height = 24;
-      tiny.getContext("2d").drawImage(source, 0, 0, 24, 24);
-      bgCanvas = tiny;
-      stage.style.backgroundImage = "url(" + tiny.toDataURL("image/png") + ")";
-      stage.style.backgroundSize = "cover";
-      stage.style.backgroundPosition = "center";
-    }catch(e){
-      // keep previous bgCanvas/background if sampling fails
-    }
   }
 
   function snapshotState(){
@@ -542,9 +507,6 @@
     var img = new Image();
     img.onload = function(){
       stageImg.src = snap.src;
-      updateBgColorFromImage(img);
-      applyImageTransform();
-      updateStageFilter();
       renderOutput();
     };
     img.src = snap.src;
@@ -570,29 +532,7 @@
       stageImg.src = dataUrl;
       naturalW = newW;
       naturalH = newH;
-      updateBgColorFromImage(img);
       fitImageToStage(false);
-      updateStageFilter();
-    };
-    img.src = dataUrl;
-  }
-
-  function bakeCurrentImage(process){
-    if(!naturalW) return;
-    var canvas = document.createElement("canvas");
-    canvas.width = naturalW;
-    canvas.height = naturalH;
-    var ctx = canvas.getContext("2d");
-    ctx.drawImage(stageImg, 0, 0, naturalW, naturalH);
-    process(ctx, naturalW, naturalH);
-    var dataUrl = canvas.toDataURL("image/png");
-    var img = new Image();
-    img.onload = function(){
-      stageImg.src = dataUrl;
-      updateBgColorFromImage(img);
-      applyImageTransform();
-      updateStageFilter();
-      renderOutput();
     };
     img.src = dataUrl;
   }
@@ -641,8 +581,6 @@
         editorSection.classList.add("active");
         updateStageSize();
         fitImageToStage(false);
-        updateStageFilter();
-        updateBgColorFromImage(img);
         history = [];
         updateUndoButton();
         originalSnapshot = snapshotState();
@@ -686,14 +624,12 @@
     zoom = parseFloat(zoomRange.value);
     zoomValue.textContent = zoom.toFixed(2) + "x";
     clampOffsets();
-    applyImageTransform();
     renderOutput();
   });
 
   tiltRange.addEventListener("pointerdown", function(){ if(naturalW) pushHistory(); });
   tiltRange.addEventListener("input", function(){
     tiltValue.textContent = parseFloat(tiltRange.value).toFixed(1) + "°";
-    applyImageTransform();
     renderOutput();
   });
 
@@ -712,7 +648,7 @@
     offsetX = dragOrigX + (e.clientX - dragStartX);
     offsetY = dragOrigY + (e.clientY - dragStartY);
     clampOffsets();
-    applyImageTransform();
+    renderOutput();
   });
   function endDrag(){
     if(dragging){ dragging = false; renderOutput(); }
@@ -724,7 +660,6 @@
     range.addEventListener("pointerdown", function(){ if(naturalW) pushHistory(); });
     range.addEventListener("input", function(){
       valueEl.textContent = range.value + suffix;
-      updateStageFilter();
       renderOutput();
     });
   }
@@ -741,8 +676,42 @@
 
   autoEnhanceBtn.addEventListener("click", function(){
     if(!naturalW) return;
+    var canvas = document.createElement("canvas");
+    canvas.width = naturalW;
+    canvas.height = naturalH;
+    var ctx = canvas.getContext("2d");
+    ctx.drawImage(stageImg, 0, 0, naturalW, naturalH);
+    var imgData = ctx.getImageData(0, 0, naturalW, naturalH);
+    var d = imgData.data;
+    var hist = new Array(256).fill(0);
+    var total = 0;
+    for(var i = 0; i < d.length; i += 4){
+      var lum = Math.round(0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2]);
+      hist[lum]++;
+      total++;
+    }
+    var clip = total * 0.01;
+    var low = 0, accLow = 0;
+    while(low < 255 && accLow < clip){ accLow += hist[low]; low++; }
+    var high = 255, accHigh = 0;
+    while(high > 0 && accHigh < clip){ accHigh += hist[high]; high--; }
+    if(high - low < 10){
+      alert("이 사진은 이미 명암 대비가 충분해서 자동 보정으로 크게 달라지지 않아요.");
+      return;
+    }
+
+    var s = 255 / (high - low);
+    var cf = 1 + (low * s) / 128;
+    var bf = s / cf;
+    cf = Math.min(2, Math.max(0.6, cf));
+    bf = Math.min(2, Math.max(0.6, bf));
+
     pushHistory();
-    bakeCurrentImage(function(ctx, w, h){ autoLevels(ctx, w, h); });
+    brightnessRange.value = Math.round(bf * 100);
+    brightnessValue.textContent = brightnessRange.value + "%";
+    contrastRange.value = Math.round(cf * 100);
+    contrastValue.textContent = contrastRange.value + "%";
+    renderOutput();
   });
 
   rotateLeftBtn.addEventListener("click", function(){ if(naturalW){ pushHistory(); rotateStage(-90); } });
@@ -768,15 +737,12 @@
       saturateRange.value = 100; saturateValue.textContent = "100%";
       hueRange.value = 0; hueValue.textContent = "0°";
       sharpenRange.value = 0; sharpenValue.textContent = "0%";
-      updateStageFilter();
     }
     if(resetTiltCheck.checked){
       tiltRange.value = 0; tiltValue.textContent = "0.0°";
     }
     if(resetZoomCheck.checked){
       fitImageToStage(false);
-    } else {
-      applyImageTransform();
     }
     renderOutput();
     resetPanel.hidden = true;
@@ -784,7 +750,7 @@
 
   revertOriginalBtn.addEventListener("click", function(){
     if(!naturalW || !originalSnapshot) return;
-    if(!confirm("정말 원본 사진으로 되돌릴까요? 지금까지의 모든 편집(회전·반전·자동 보정 포함)이 취소됩니다.")) return;
+    if(!confirm("정말 원본 사진으로 되돌릴까요? 지금까지의 모든 편집(회전·반전 포함)이 취소됩니다.")) return;
     pushHistory();
     restoreSnapshot(originalSnapshot);
     resetPanel.hidden = true;
@@ -800,32 +766,9 @@
     originalSnapshot = null;
     updateUndoButton();
     resetPanel.hidden = true;
+    stageCanvas.getContext("2d").clearRect(0, 0, stageCanvas.width, stageCanvas.height);
   });
 
-  function autoLevels(ctx, w, h){
-    var imgData = ctx.getImageData(0, 0, w, h);
-    var d = imgData.data;
-    var hist = new Array(256).fill(0);
-    var total = 0;
-    for(var i = 0; i < d.length; i += 4){
-      var lum = Math.round(0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2]);
-      hist[lum]++;
-      total++;
-    }
-    var clip = total * 0.01;
-    var low = 0, accLow = 0;
-    while(low < 255 && accLow < clip){ accLow += hist[low]; low++; }
-    var high = 255, accHigh = 0;
-    while(high > 0 && accHigh < clip){ accHigh += hist[high]; high--; }
-    if(high - low < 10) return;
-    var range = high - low;
-    for(var j = 0; j < d.length; j += 4){
-      d[j]   = clamp255((d[j]   - low) * 255 / range);
-      d[j+1] = clamp255((d[j+1] - low) * 255 / range);
-      d[j+2] = clamp255((d[j+2] - low) * 255 / range);
-    }
-    ctx.putImageData(imgData, 0, 0);
-  }
   function clamp255(v){ return v < 0 ? 0 : (v > 255 ? 255 : v); }
 
   function applySharpen(ctx, w, h, amount){
@@ -922,37 +865,18 @@
     ctx.putImageData(imgData, 0, 0);
   }
 
-  var renderPending = false;
-  function renderOutput(){
-    if(renderPending) return;
-    renderPending = true;
-    requestAnimationFrame(function(){
-      renderPending = false;
-      doRenderOutput();
-    });
-  }
-
-  function doRenderOutput(){
-    if(!naturalW) return;
-    var mm = currentTargetMm();
-    if(!mm) return;
-    var outW = mmToPx(mm.w);
-    var outH = mmToPx(mm.h);
-    outputPreview.width = outW;
-    outputPreview.height = outH;
+  function renderPhotoTo(ctx, boxW, boxH){
+    var tiny = document.createElement("canvas");
+    tiny.width = 20;
+    tiny.height = 20;
+    tiny.getContext("2d").drawImage(stageImg, 0, 0, naturalW, naturalH, 0, 0, 20, 20);
+    ctx.drawImage(tiny, 0, 0, boxW, boxH);
 
     var scale = fitScale * zoom;
     var tiltDeg = parseFloat(tiltRange.value) || 0;
-    var k = outW / stageW;
+    var k = boxW / stageW;
     var cx = stageW / 2, cy = stageH / 2;
 
-    var ctx = outputPreview.getContext("2d");
-    if(bgCanvas){
-      ctx.drawImage(bgCanvas, 0, 0, outW, outH);
-    } else {
-      ctx.fillStyle = "#333333";
-      ctx.fillRect(0, 0, outW, outH);
-    }
     ctx.save();
     ctx.scale(k, k);
     ctx.translate(cx, cy);
@@ -963,9 +887,36 @@
     ctx.drawImage(stageImg, 0, 0, naturalW, naturalH);
     ctx.restore();
 
-    applyAdjustments(ctx, outW, outH);
-    applySharpen(ctx, outW, outH, parseFloat(sharpenRange.value) / 100 * 3);
+    applyAdjustments(ctx, boxW, boxH);
+    applySharpen(ctx, boxW, boxH, parseFloat(sharpenRange.value) / 100 * 3);
+  }
 
+  function renderStageCanvas(){
+    stageCanvas.width = stageW;
+    stageCanvas.height = stageH;
+    renderPhotoTo(stageCanvas.getContext("2d"), stageW, stageH);
+  }
+
+  var renderPending = false;
+  function renderOutput(){
+    if(renderPending) return;
+    renderPending = true;
+    requestAnimationFrame(function(){
+      renderPending = false;
+      if(!naturalW) return;
+      renderStageCanvas();
+      doRenderOutput();
+    });
+  }
+
+  function doRenderOutput(){
+    var mm = currentTargetMm();
+    if(!mm) return;
+    var outW = mmToPx(mm.w);
+    var outH = mmToPx(mm.h);
+    outputPreview.width = outW;
+    outputPreview.height = outH;
+    renderPhotoTo(outputPreview.getContext("2d"), outW, outH);
     dimNote.textContent = outW + " × " + outH + "px (300dpi 기준 " + mm.w + "×" + mm.h + "mm)";
   }
 
@@ -988,7 +939,6 @@
     if(naturalW){
       updateStageSize();
       clampOffsets();
-      applyImageTransform();
       renderOutput();
     }
   });
