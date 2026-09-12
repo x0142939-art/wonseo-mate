@@ -13,6 +13,8 @@
     --sub:#6b7280;
     --accent:#3661f0;
     --accent-light:#e8edff;
+    --danger:#e0483e;
+    --danger-light:#fdeceb;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
@@ -147,12 +149,30 @@
     color:#fff;
     font-weight:600;
   }
+  .btn.danger{
+    color:var(--danger);
+    border-color:var(--danger);
+    background:var(--danger-light);
+  }
+  .btn:disabled{
+    opacity:0.45;
+    cursor:not-allowed;
+  }
   .btn-row{
     display:flex;
     gap:8px;
     flex-wrap:wrap;
   }
   .btn-row .btn{ flex:1; min-width:120px; }
+  .checkbox-line{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:13px;
+    color:var(--text);
+    margin-bottom:10px;
+  }
+  .checkbox-line input{ width:16px; height:16px; }
 
   #outputPreviewWrap{
     text-align:center;
@@ -217,6 +237,25 @@
   </div>
 
   <div id="editorSection">
+    <div class="btn-row" style="margin-bottom:16px;">
+      <button class="btn" id="undoBtn" type="button" disabled>↩ 되돌리기</button>
+      <button class="btn" id="resetMenuBtn" type="button">초기화</button>
+    </div>
+    <div class="card" id="resetPanel" hidden>
+      <h2>무엇을 초기화할까요?</h2>
+      <label class="checkbox-line"><input type="checkbox" id="resetAdjustCheck" checked> 보정값 (밝기·대비·채도·색상·선명도)</label>
+      <label class="checkbox-line"><input type="checkbox" id="resetZoomCheck" checked> 확대·위치</label>
+      <label class="checkbox-line"><input type="checkbox" id="resetTiltCheck" checked> 기울기</label>
+      <div class="btn-row">
+        <button class="btn primary" id="applyResetBtn" type="button">선택 항목 초기화</button>
+        <button class="btn" id="cancelResetBtn" type="button">취소</button>
+      </div>
+      <p class="hint-text">회전·반전·자동 보정처럼 사진에 직접 반영된 편집은 위 항목으로는 되돌릴 수 없어요. 그럴 땐 "되돌리기"를 누르거나, 아래에서 원본으로 되돌리세요.</p>
+      <div class="btn-row">
+        <button class="btn danger" id="revertOriginalBtn" type="button">원본 사진으로 되돌리기</button>
+      </div>
+    </div>
+
     <div class="card">
       <h2>규격 선택</h2>
       <div class="field-row">
@@ -293,9 +332,8 @@
       <p class="hint-text">선명도는 아래 "미리보기 &amp; 다운로드" 캔버스와 실제 저장 파일에만 적용돼요. 위쪽 자르기 화면에는 표시되지 않으니 아래에서 확인해주세요.</p>
       <div class="btn-row" style="margin-top:10px;">
         <button class="btn" id="autoEnhanceBtn" type="button">자동 보정 적용</button>
-        <button class="btn" id="resetAdjustBtn" type="button">보정값 초기화</button>
       </div>
-      <p class="hint-text">"자동 보정 적용"을 누르면 사진 전체의 밝고 어두운 정도를 분석해서 대비를 즉시 넓혀줘요 (회전·반전처럼 사진에 바로, 영구적으로 반영됩니다). 조명이 흐릿하거나 뿌옇게 나온 사진에 효과적이고, 이미 선명한 사진은 큰 변화가 없을 수 있어요. 마음에 안 들면 "다른 사진 선택"으로 원본을 다시 올려서 시작할 수 있어요.</p>
+      <p class="hint-text">"자동 보정 적용"을 누르면 사진 전체의 밝고 어두운 정도를 분석해서 대비를 즉시 넓혀줘요 (회전·반전처럼 사진에 바로 반영됩니다). 조명이 흐릿하거나 뿌옇게 나온 사진에 효과적이고, 이미 선명한 사진은 큰 변화가 없을 수 있어요. 마음에 안 들면 상단의 "되돌리기"를 누르세요.</p>
     </div>
 
     <div class="card">
@@ -366,17 +404,28 @@
   var formatSelect = document.getElementById("formatSelect");
   var downloadBtn = document.getElementById("downloadBtn");
   var changePhotoBtn = document.getElementById("changePhotoBtn");
-  var resetAdjustBtn = document.getElementById("resetAdjustBtn");
   var rotateLeftBtn = document.getElementById("rotateLeftBtn");
   var rotateRightBtn = document.getElementById("rotateRightBtn");
   var flipHBtn = document.getElementById("flipHBtn");
   var flipVBtn = document.getElementById("flipVBtn");
+  var undoBtn = document.getElementById("undoBtn");
+  var resetMenuBtn = document.getElementById("resetMenuBtn");
+  var resetPanel = document.getElementById("resetPanel");
+  var resetAdjustCheck = document.getElementById("resetAdjustCheck");
+  var resetZoomCheck = document.getElementById("resetZoomCheck");
+  var resetTiltCheck = document.getElementById("resetTiltCheck");
+  var applyResetBtn = document.getElementById("applyResetBtn");
+  var cancelResetBtn = document.getElementById("cancelResetBtn");
+  var revertOriginalBtn = document.getElementById("revertOriginalBtn");
 
   var naturalW = 0, naturalH = 0;
   var fitScale = 1, zoom = 1;
   var offsetX = 0, offsetY = 0;
   var stageW = 320, stageH = 320;
   var dragging = false, dragStartX = 0, dragStartY = 0, dragOrigX = 0, dragOrigY = 0;
+  var bgColor = "#333333";
+  var history = [];
+  var originalSnapshot = null;
 
   function mmToPx(mm){ return Math.round(mm / 25.4 * DPI); }
 
@@ -433,6 +482,90 @@
       "hue-rotate("+hueRange.value+"deg)";
   }
 
+  function updateBgColorFromImage(source){
+    try{
+      var size = 32;
+      var c = document.createElement("canvas");
+      c.width = size; c.height = size;
+      var cctx = c.getContext("2d");
+      cctx.drawImage(source, 0, 0, size, size);
+      var edge = cctx.getImageData(0, 0, size, size).data;
+      var r = 0, g = 0, b = 0, n = 0;
+      for(var y = 0; y < size; y++){
+        for(var x = 0; x < size; x++){
+          if(x === 0 || y === 0 || x === size - 1 || y === size - 1){
+            var i = (y * size + x) * 4;
+            r += edge[i]; g += edge[i+1]; b += edge[i+2]; n++;
+          }
+        }
+      }
+      bgColor = "rgb("+Math.round(r/n)+","+Math.round(g/n)+","+Math.round(b/n)+")";
+      stage.style.backgroundColor = bgColor;
+    }catch(e){
+      // keep previous bgColor if sampling fails
+    }
+  }
+
+  function snapshotState(){
+    return {
+      src: stageImg.src,
+      naturalW: naturalW,
+      naturalH: naturalH,
+      zoom: zoom,
+      offsetX: offsetX,
+      offsetY: offsetY,
+      tilt: tiltRange.value,
+      brightness: brightnessRange.value,
+      contrast: contrastRange.value,
+      saturate: saturateRange.value,
+      hue: hueRange.value,
+      sharpen: sharpenRange.value
+    };
+  }
+
+  function pushHistory(){
+    history.push(snapshotState());
+    if(history.length > 15) history.shift();
+    updateUndoButton();
+  }
+
+  function updateUndoButton(){
+    undoBtn.disabled = history.length === 0;
+  }
+
+  function restoreSnapshot(snap){
+    naturalW = snap.naturalW;
+    naturalH = snap.naturalH;
+    zoom = snap.zoom;
+    offsetX = snap.offsetX;
+    offsetY = snap.offsetY;
+    tiltRange.value = snap.tilt;
+    tiltValue.textContent = parseFloat(snap.tilt).toFixed(1) + "°";
+    brightnessRange.value = snap.brightness; brightnessValue.textContent = snap.brightness + "%";
+    contrastRange.value = snap.contrast; contrastValue.textContent = snap.contrast + "%";
+    saturateRange.value = snap.saturate; saturateValue.textContent = snap.saturate + "%";
+    hueRange.value = snap.hue; hueValue.textContent = snap.hue + "°";
+    sharpenRange.value = snap.sharpen; sharpenValue.textContent = snap.sharpen + "%";
+    zoomRange.value = zoom; zoomValue.textContent = zoom.toFixed(2) + "x";
+
+    var img = new Image();
+    img.onload = function(){
+      stageImg.src = snap.src;
+      updateBgColorFromImage(img);
+      applyImageTransform();
+      updateStageFilter();
+      renderOutput();
+    };
+    img.src = snap.src;
+  }
+
+  function undo(){
+    if(history.length === 0) return;
+    var snap = history.pop();
+    restoreSnapshot(snap);
+    updateUndoButton();
+  }
+
   function transformStageImage(draw, newW, newH){
     if(!naturalW) return;
     var canvas = document.createElement("canvas");
@@ -446,6 +579,7 @@
       stageImg.src = dataUrl;
       naturalW = newW;
       naturalH = newH;
+      updateBgColorFromImage(img);
       fitImageToStage(false);
       updateStageFilter();
     };
@@ -464,6 +598,7 @@
     var img = new Image();
     img.onload = function(){
       stageImg.src = dataUrl;
+      updateBgColorFromImage(img);
       applyImageTransform();
       updateStageFilter();
       renderOutput();
@@ -516,6 +651,10 @@
         updateStageSize();
         fitImageToStage(false);
         updateStageFilter();
+        updateBgColorFromImage(img);
+        history = [];
+        updateUndoButton();
+        originalSnapshot = snapshotState();
       };
       img.src = e.target.result;
     };
@@ -551,6 +690,7 @@
   customW.addEventListener("input", function(){ updateStageSize(); renderOutput(); });
   customH.addEventListener("input", function(){ updateStageSize(); renderOutput(); });
 
+  zoomRange.addEventListener("pointerdown", function(){ if(naturalW) pushHistory(); });
   zoomRange.addEventListener("input", function(){
     zoom = parseFloat(zoomRange.value);
     zoomValue.textContent = zoom.toFixed(2) + "x";
@@ -559,6 +699,7 @@
     renderOutput();
   });
 
+  tiltRange.addEventListener("pointerdown", function(){ if(naturalW) pushHistory(); });
   tiltRange.addEventListener("input", function(){
     tiltValue.textContent = parseFloat(tiltRange.value).toFixed(1) + "°";
     applyImageTransform();
@@ -567,6 +708,7 @@
 
   stage.addEventListener("pointerdown", function(e){
     if(!naturalW) return;
+    pushHistory();
     dragging = true;
     stage.setPointerCapture(e.pointerId);
     dragStartX = e.clientX;
@@ -588,6 +730,7 @@
   stage.addEventListener("pointercancel", endDrag);
 
   function bindSlider(range, valueEl, suffix){
+    range.addEventListener("pointerdown", function(){ if(naturalW) pushHistory(); });
     range.addEventListener("input", function(){
       valueEl.textContent = range.value + suffix;
       updateStageFilter();
@@ -599,28 +742,61 @@
   bindSlider(saturateRange, saturateValue, "%");
   bindSlider(hueRange, hueValue, "°");
 
+  sharpenRange.addEventListener("pointerdown", function(){ if(naturalW) pushHistory(); });
   sharpenRange.addEventListener("input", function(){
     sharpenValue.textContent = sharpenRange.value + "%";
     renderOutput();
   });
 
   autoEnhanceBtn.addEventListener("click", function(){
+    if(!naturalW) return;
+    pushHistory();
     bakeCurrentImage(function(ctx, w, h){ autoLevels(ctx, w, h); });
   });
 
-  rotateLeftBtn.addEventListener("click", function(){ rotateStage(-90); });
-  rotateRightBtn.addEventListener("click", function(){ rotateStage(90); });
-  flipHBtn.addEventListener("click", function(){ flipStage("h"); });
-  flipVBtn.addEventListener("click", function(){ flipStage("v"); });
+  rotateLeftBtn.addEventListener("click", function(){ if(naturalW){ pushHistory(); rotateStage(-90); } });
+  rotateRightBtn.addEventListener("click", function(){ if(naturalW){ pushHistory(); rotateStage(90); } });
+  flipHBtn.addEventListener("click", function(){ if(naturalW){ pushHistory(); flipStage("h"); } });
+  flipVBtn.addEventListener("click", function(){ if(naturalW){ pushHistory(); flipStage("v"); } });
 
-  resetAdjustBtn.addEventListener("click", function(){
-    brightnessRange.value = 100; brightnessValue.textContent = "100%";
-    contrastRange.value = 100; contrastValue.textContent = "100%";
-    saturateRange.value = 100; saturateValue.textContent = "100%";
-    hueRange.value = 0; hueValue.textContent = "0°";
-    sharpenRange.value = 0; sharpenValue.textContent = "0%";
-    updateStageFilter();
+  undoBtn.addEventListener("click", function(){ undo(); });
+
+  resetMenuBtn.addEventListener("click", function(){
+    resetPanel.hidden = !resetPanel.hidden;
+  });
+  cancelResetBtn.addEventListener("click", function(){
+    resetPanel.hidden = true;
+  });
+
+  applyResetBtn.addEventListener("click", function(){
+    if(!naturalW) return;
+    pushHistory();
+    if(resetAdjustCheck.checked){
+      brightnessRange.value = 100; brightnessValue.textContent = "100%";
+      contrastRange.value = 100; contrastValue.textContent = "100%";
+      saturateRange.value = 100; saturateValue.textContent = "100%";
+      hueRange.value = 0; hueValue.textContent = "0°";
+      sharpenRange.value = 0; sharpenValue.textContent = "0%";
+      updateStageFilter();
+    }
+    if(resetTiltCheck.checked){
+      tiltRange.value = 0; tiltValue.textContent = "0.0°";
+    }
+    if(resetZoomCheck.checked){
+      fitImageToStage(false);
+    } else {
+      applyImageTransform();
+    }
     renderOutput();
+    resetPanel.hidden = true;
+  });
+
+  revertOriginalBtn.addEventListener("click", function(){
+    if(!naturalW || !originalSnapshot) return;
+    if(!confirm("정말 원본 사진으로 되돌릴까요? 지금까지의 모든 편집(회전·반전·자동 보정 포함)이 취소됩니다.")) return;
+    pushHistory();
+    restoreSnapshot(originalSnapshot);
+    resetPanel.hidden = true;
   });
 
   changePhotoBtn.addEventListener("click", function(){
@@ -629,6 +805,10 @@
     fileInput.value = "";
     editorSection.classList.remove("active");
     uploadCard.style.display = "block";
+    history = [];
+    originalSnapshot = null;
+    updateUndoButton();
+    resetPanel.hidden = true;
   });
 
   function autoLevels(ctx, w, h){
@@ -776,6 +956,8 @@
     var cx = stageW / 2, cy = stageH / 2;
 
     var ctx = outputPreview.getContext("2d");
+    ctx.fillStyle = bgColor;
+    ctx.fillRect(0, 0, outW, outH);
     ctx.save();
     ctx.scale(k, k);
     ctx.translate(cx, cy);
