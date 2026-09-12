@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2480597092657171" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/tesseract.min.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>학점 계산기 - 대학 GPA·고교 내신 등급 무료 계산 | 원서메이트</title>
+<meta name="description" content="대학 학점(4.5/4.3 만점 GPA)과 고등학교 내신 등급을 무료로 계산하세요. 목표 평균을 위해 남은 학기에 필요한 성적도 알려드려요. 로그인 없이 브라우저에서 바로 사용 가능합니다.">
+<meta name="keywords" content="학점 계산기, GPA 계산기, 내신 등급 계산기, 평량평균 계산, 대학 학점 계산">
+<link rel="canonical" href="https://wonseo-mate.netlify.app/gpa-calculator/">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:site_name" content="원서메이트">
+<meta property="og:url" content="https://wonseo-mate.netlify.app/gpa-calculator/">
+<meta property="og:title" content="학점 계산기 - 대학 GPA·고교 내신 등급 무료 계산">
+<meta property="og:description" content="대학 학점(GPA)과 고등학교 내신 등급을 무료로 계산하고, 목표 평균에 필요한 성적까지 알아보세요.">
+<meta property="og:image" content="https://wonseo-mate.netlify.app/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://wonseo-mate.netlify.app/og-image.png">
+<style>
+  :root{
+    --bg:#f5f6f8;
+    --card:#ffffff;
+    --border:#e2e4e9;
+    --text:#1c1f26;
+    --sub:#6b7280;
+    --accent:#3661f0;
+    --accent-light:#e8edff;
+    --danger:#e0483e;
+    --danger-light:#fdeceb;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Segoe UI",Roboto,sans-serif;
+    word-break:keep-all;
+    line-height:1.5;
+    padding:24px 16px 80px;
+  }
+  .wrap{
+    max-width:760px;
+    margin:0 auto;
+  }
+  .back-link{ display:inline-block; margin-bottom:12px; font-size:13px; color:var(--sub); text-decoration:none; }
+  .back-link:hover{ color:var(--accent); }
+  header{
+    margin-bottom:20px;
+  }
+  h1{
+    font-size:22px;
+    margin:0 0 6px;
+  }
+  header p{
+    margin:0;
+    color:var(--sub);
+    font-size:14px;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:18px;
+    margin-bottom:16px;
+  }
+  .card h2{
+    font-size:15px;
+    margin:0 0 12px;
+  }
+  .toggle-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  .scale-toggle{
+    display:inline-flex;
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:3px;
+  }
+  .scale-toggle button{
+    border:none;
+    background:transparent;
+    padding:7px 14px;
+    border-radius:8px;
+    font-size:13px;
+    cursor:pointer;
+    color:var(--sub);
+  }
+  .scale-toggle button.active{
+    background:var(--accent);
+    color:#fff;
+  }
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:14px;
+  }
+  th{
+    text-align:left;
+    font-size:12px;
+    color:var(--sub);
+    font-weight:600;
+    padding:6px 6px;
+    border-bottom:1px solid var(--border);
+  }
+  td{
+    padding:6px 6px;
+    border-bottom:1px solid var(--border);
+    vertical-align:middle;
+  }
+  input[type="text"], input[type="number"], select{
+    width:100%;
+    padding:9px 8px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    font-size:14px;
+    background:#fff;
+    color:var(--text);
+    font-family:inherit;
+  }
+  input[type="number"]{
+    max-width:78px;
+  }
+  .col-credit{width:16%;}
+  .col-grade{width:26%;}
+  .col-pnp{width:10%; text-align:center;}
+  .col-del{width:10%; text-align:center;}
+  .pnp-cell input{width:16px;height:16px;}
+  .del-btn{
+    background:none;
+    border:none;
+    color:var(--danger);
+    font-size:18px;
+    cursor:pointer;
+    line-height:1;
+    padding:4px;
+  }
+  .add-row-btn{
+    margin-top:10px;
+    width:100%;
+    padding:11px;
+    border:1px dashed var(--border);
+    border-radius:10px;
+    background:transparent;
+    color:var(--accent);
+    font-size:14px;
+    cursor:pointer;
+  }
+  .add-row-btn:hover{
+    background:var(--accent-light);
+  }
+  .result-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+  }
+  .result-box{
+    background:var(--accent-light);
+    border-radius:10px;
+    padding:14px 10px;
+    text-align:center;
+  }
+  .result-box .label{
+    font-size:12px;
+    color:var(--sub);
+    margin-bottom:4px;
+  }
+  .result-box .value{
+    font-size:20px;
+    font-weight:700;
+    color:var(--accent);
+  }
+  .goal-inputs{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:12px;
+  }
+  .goal-inputs label{
+    flex:1;
+    min-width:140px;
+    font-size:13px;
+    color:var(--sub);
+    display:block;
+  }
+  .goal-inputs input{
+    margin-top:6px;
+  }
+  .goal-result{
+    background:var(--bg);
+    border-radius:10px;
+    padding:14px;
+    font-size:14px;
+  }
+  .goal-result.warn{
+    background:var(--danger-light);
+    color:var(--danger);
+  }
+  .ocr-card{ border-style:dashed; }
+  .ocr-desc{
+    margin:0 0 12px;
+    font-size:13px;
+    color:var(--sub);
+  }
+  .ocr-upload-btn{
+    display:inline-block;
+    background:var(--accent);
+    color:#fff;
+    padding:9px 16px;
+    border-radius:10px;
+    font-size:13px;
+    cursor:pointer;
+  }
+  .ocr-status{
+    margin-top:10px;
+    font-size:13px;
+    color:var(--sub);
+  }
+  .ocr-status.error{ color:var(--danger); }
+  .ocr-status.done{ color:var(--accent); }
+  .goal-result b{
+    font-size:17px;
+  }
+  .footer-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:8px;
+    margin-top:-4px;
+  }
+  .reset-btn{
+    border:none;
+    background:none;
+    color:var(--sub);
+    font-size:13px;
+    cursor:pointer;
+    text-decoration:underline;
+  }
+  @media (max-width:520px){
+    th, td{font-size:12px;}
+    .result-grid{grid-template-columns:1fr;}
+  }
+  .site-footer{
+    max-width:760px;
+    margin:24px auto 0;
+    padding-top:16px;
+    border-top:1px solid var(--border);
+    font-size:12px;
+    color:var(--sub);
+    text-align:center;
+  }
+  .site-footer a{ color:var(--sub); }
+  #ad-slot{ margin-bottom:16px; }
+</style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "학점 계산기",
+  "url": "https://wonseo-mate.netlify.app/gpa-calculator/",
+  "applicationCategory": "UtilityApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "KRW" },
+  "description": "대학 학점(GPA)과 고등학교 내신 등급을 계산하는 무료 웹 도구",
+  "inLanguage": "ko"
+}
+</script>
+</head>
+<body>
+<div class="wrap">
+  <a href="../" class="back-link">← 첫 화면으로</a>
+  <header>
+    <h1>학점 계산기</h1>
+    <p>대학 학점(GPA)과 고등학교 내신 등급을 모두 계산할 수 있어요. 입력한 내용은 브라우저에만 저장되고 서버로 전송되지 않아요.</p>
+  </header>
+
+  <div class="card">
+    <div class="toggle-row">
+      <h2 style="margin:0;">계산기 종류</h2>
+      <div class="scale-toggle" id="modeToggle">
+        <button data-mode="university" class="active">대학 학점 계산기</button>
+        <button data-mode="highschool">고교 내신 등급 계산기</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="universitySection">
+  <div class="card">
+    <div class="toggle-row">
+      <h2 style="margin:0;">성적 체계</h2>
+      <div class="scale-toggle" id="scaleToggle">
+        <button data-scale="4.5" class="active">4.5 만점</button>
+        <button data-scale="4.3">4.3 만점</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card ocr-card">
+    <h2>성적표 이미지로 자동 입력</h2>
+    <p class="ocr-desc">성적표를 캡처·촬영한 이미지를 올리면 학점·성적을 읽어서 자동으로 채워드려요. 표 부분만 반듯하게 캡처한 이미지가 가장 잘 인식돼요. 완벽하지 않을 수 있으니 채워진 후 꼭 확인해주세요.</p>
+    <label class="ocr-upload-btn">
+      📷 이미지 선택
+      <input type="file" id="ocrInput" accept="image/*" hidden>
+    </label>
+    <div class="ocr-status" id="ocrStatus"></div>
+  </div>
+
+  <div class="card">
+    <h2>과목 입력</h2>
+    <table>
+      <thead>
+        <tr>
+          <th class="col-credit">학점</th>
+          <th class="col-grade">성적</th>
+          <th class="col-pnp">P/NP</th>
+          <th class="col-del"></th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <button class="add-row-btn" id="addRowBtn">+ 과목 추가</button>
+    <div class="footer-actions">
+      <button class="reset-btn" id="resetBtn">전체 초기화</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>결과</h2>
+    <div class="result-grid">
+      <div class="result-box">
+        <div class="label">총 신청학점</div>
+        <div class="value" id="totalCredits">0</div>
+      </div>
+      <div class="result-box">
+        <div class="label">평량평균 (GPA)</div>
+        <div class="value" id="gpaValue">0.00</div>
+      </div>
+      <div class="result-box">
+        <div class="label">백분율 환산 참고</div>
+        <div class="value" id="percentValue">0%</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>목표 학점 계산기</h2>
+    <div class="goal-inputs">
+      <label>목표 평균 학점(GPA)
+        <input type="number" id="goalGpa" step="0.01" placeholder="예: 3.80">
+      </label>
+      <label>남은 예정 학점
+        <input type="number" id="goalCredits" step="0.5" placeholder="예: 15">
+      </label>
+    </div>
+    <div class="goal-result" id="goalResult">목표 GPA와 남은 학점을 입력하면, 남은 과목에서 필요한 평균 평점을 계산해드려요.</div>
+  </div>
+  </div>
+
+  <div id="highschoolSection" style="display:none;">
+  <div class="card ocr-card">
+    <h2>성적표 이미지로 자동 입력</h2>
+    <p class="ocr-desc">성적표를 캡처·촬영한 이미지를 올리면 단위수·등급을 읽어서 자동으로 채워드려요. 표 부분만 반듯하게 캡처한 이미지가 가장 잘 인식돼요. 완벽하지 않을 수 있으니 채워진 후 꼭 확인해주세요.</p>
+    <label class="ocr-upload-btn">
+      📷 이미지 선택
+      <input type="file" id="hsOcrInput" accept="image/*" hidden>
+    </label>
+    <div class="ocr-status" id="hsOcrStatus"></div>
+  </div>
+
+  <div class="card">
+    <h2>과목 입력 (고교 내신)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th class="col-credit">단위수</th>
+          <th class="col-grade">등급</th>
+          <th class="col-pnp">제외</th>
+          <th class="col-del"></th>
+        </tr>
+      </thead>
+      <tbody id="hsRows"></tbody>
+    </table>
+    <button class="add-row-btn" id="hsAddRowBtn">+ 과목 추가</button>
+    <div class="footer-actions">
+      <button class="reset-btn" id="hsResetBtn">전체 초기화</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>결과</h2>
+    <div class="result-grid">
+      <div class="result-box">
+        <div class="label">총 이수단위</div>
+        <div class="value" id="hsTotalUnits">0</div>
+      </div>
+      <div class="result-box">
+        <div class="label">평균 등급</div>
+        <div class="value" id="hsAverageGrade">0.00</div>
+      </div>
+      <div class="result-box">
+        <div class="label">대략적인 등급</div>
+        <div class="value" id="hsRoundedGrade">-</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>목표 등급 계산기</h2>
+    <div class="goal-inputs">
+      <label>목표 평균 등급
+        <input type="number" id="hsGoalGrade" step="0.1" placeholder="예: 2.0">
+      </label>
+      <label>남은 예정 단위수
+        <input type="number" id="hsGoalUnits" step="1" placeholder="예: 20">
+      </label>
+    </div>
+    <div class="goal-result" id="hsGoalResult">목표 평균 등급과 남은 단위수를 입력하면, 남은 과목에서 필요한 평균 등급을 계산해드려요.</div>
+  </div>
+  </div>
+
+  <div class="card">
+    <a href="../id-photo-editor/" style="text-decoration:none;color:inherit;display:block;">
+      <div style="font-weight:700;font-size:14px;color:var(--accent);">다음 단계 → 증명사진 준비하기</div>
+      <div style="font-size:13px;color:var(--sub);margin-top:4px;">학점 정리가 끝났다면, 증명사진도 규격에 맞게 다듬어보세요.</div>
+    </a>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div id="ad-slot">
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-2480597092657171"
+         data-ad-slot="5546202613"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </div>
+  <a href="../">원서메이트</a> · © 2026 원서메이트. 무단 복제·재배포·재판매를 금지합니다.
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  var SCALES = {
+    "4.5": {"A+":4.5,"A0":4.0,"B+":3.5,"B0":3.0,"C+":2.5,"C0":2.0,"D+":1.5,"D0":1.0,"F":0.0},
+    "4.3": {"A+":4.3,"A0":4.0,"B+":3.3,"B0":3.0,"C+":2.3,"C0":2.0,"D+":1.3,"D0":1.0,"F":0.0}
+  };
+  var HS_GRADES = ["1","2","3","4","5","6","7","8","9"];
+
+  var rowsEl = document.getElementById("rows");
+  var hsRowsEl = document.getElementById("hsRows");
+  var scaleToggle = document.getElementById("scaleToggle");
+  var modeToggle = document.getElementById("modeToggle");
+  var universitySection = document.getElementById("universitySection");
+  var highschoolSection = document.getElementById("highschoolSection");
+  var currentScale = "4.5";
+  var currentMode = "university";
+  var rowIdSeq = 0;
+  var hsRowIdSeq = 0;
+
+  function gradeOptions(selected){
+    var grades = Object.keys(SCALES[currentScale]);
+    return grades.map(function(g){
+      var sel = g === selected ? " selected" : "";
+      return '<option value="'+g+'"'+sel+'>'+g+'</option>';
+    }).join("");
+  }
+
+  function hsGradeOptions(selected){
+    return HS_GRADES.map(function(g){
+      var sel = g === String(selected) ? " selected" : "";
+      return '<option value="'+g+'"'+sel+'>'+g+'등급</option>';
+    }).join("");
+  }
+
+  function createRow(data){
+    data = data || {};
+    var id = "row"+(rowIdSeq++);
+    var tr = document.createElement("tr");
+    tr.dataset.id = id;
+    tr.innerHTML =
+      '<td><input type="number" class="f-credit" min="0" max="6" step="0.5" value="'+(data.credit != null ? data.credit : 3)+'"></td>' +
+      '<td><select class="f-grade">'+gradeOptions(data.grade || "A0")+'</select></td>' +
+      '<td class="col-pnp pnp-cell"><input type="checkbox" class="f-pnp"'+(data.pnp ? " checked" : "")+'></td>' +
+      '<td class="col-del"><button type="button" class="del-btn" title="삭제">×</button></td>';
+    rowsEl.appendChild(tr);
+
+    tr.querySelectorAll("input, select").forEach(function(el){
+      el.addEventListener("input", renderUni);
+      el.addEventListener("change", renderUni);
+    });
+    tr.querySelector(".del-btn").addEventListener("click", function(){
+      tr.remove();
+      renderUni();
+    });
+  }
+
+  function createHsRow(data){
+    data = data || {};
+    var id = "hsrow"+(hsRowIdSeq++);
+    var tr = document.createElement("tr");
+    tr.dataset.id = id;
+    tr.innerHTML =
+      '<td><input type="number" class="f-credit" min="0" max="10" step="1" value="'+(data.unit != null ? data.unit : 3)+'"></td>' +
+      '<td><select class="f-grade">'+hsGradeOptions(data.grade || "3")+'</select></td>' +
+      '<td class="col-pnp pnp-cell"><input type="checkbox" class="f-pnp"'+(data.excluded ? " checked" : "")+'></td>' +
+      '<td class="col-del"><button type="button" class="del-btn" title="삭제">×</button></td>';
+    hsRowsEl.appendChild(tr);
+
+    tr.querySelectorAll("input, select").forEach(function(el){
+      el.addEventListener("input", renderHs);
+      el.addEventListener("change", renderHs);
+    });
+    tr.querySelector(".del-btn").addEventListener("click", function(){
+      tr.remove();
+      renderHs();
+    });
+  }
+
+  function collectRows(){
+    return Array.prototype.map.call(rowsEl.querySelectorAll("tr"), function(tr){
+      return {
+        credit: parseFloat(tr.querySelector(".f-credit").value) || 0,
+        grade: tr.querySelector(".f-grade").value,
+        pnp: tr.querySelector(".f-pnp").checked
+      };
+    });
+  }
+
+  function collectHsRows(){
+    return Array.prototype.map.call(hsRowsEl.querySelectorAll("tr"), function(tr){
+      return {
+        unit: parseFloat(tr.querySelector(".f-credit").value) || 0,
+        grade: tr.querySelector(".f-grade").value,
+        excluded: tr.querySelector(".f-pnp").checked
+      };
+    });
+  }
+
+  function calcGpa(rows){
+    var totalCredits = 0;
+    var totalPoints = 0;
+    rows.forEach(function(r){
+      totalCredits += r.credit;
+      if(!r.pnp){
+        var point = SCALES[currentScale][r.grade];
+        if(point == null) point = 0;
+        totalPoints += point * r.credit;
+      }
+    });
+    var gpaCredits = rows.reduce(function(sum, r){ return r.pnp ? sum : sum + r.credit; }, 0);
+    var gpa = gpaCredits > 0 ? totalPoints / gpaCredits : 0;
+    return { totalCredits: totalCredits, gpa: gpa };
+  }
+
+  function calcHs(rows){
+    var totalUnits = 0;
+    var gradeUnits = 0;
+    var countedUnits = 0;
+    rows.forEach(function(r){
+      totalUnits += r.unit;
+      if(!r.excluded){
+        gradeUnits += (parseFloat(r.grade) || 0) * r.unit;
+        countedUnits += r.unit;
+      }
+    });
+    var average = countedUnits > 0 ? gradeUnits / countedUnits : 0;
+    return { totalUnits: totalUnits, average: average };
+  }
+
+  function renderUni(){
+    var rows = collectRows();
+    var result = calcGpa(rows);
+    document.getElementById("totalCredits").textContent = trimNum(result.totalCredits);
+    var maxScale = parseFloat(currentScale);
+    document.getElementById("gpaValue").textContent = result.gpa.toFixed(2) + " / " + trimNum(maxScale);
+    var percent = maxScale > 0 ? (result.gpa / maxScale * 100) : 0;
+    document.getElementById("percentValue").textContent = percent.toFixed(1) + "%";
+    updateGoal(result);
+  }
+
+  function renderHs(){
+    var rows = collectHsRows();
+    var result = calcHs(rows);
+    document.getElementById("hsTotalUnits").textContent = trimNum(result.totalUnits);
+    document.getElementById("hsAverageGrade").textContent = result.average.toFixed(2);
+    var rounded = result.average > 0 ? Math.round(Math.min(9, Math.max(1, result.average))) : 0;
+    document.getElementById("hsRoundedGrade").textContent = rounded > 0 ? (rounded + "등급") : "-";
+    updateHsGoal(result);
+  }
+
+  function trimNum(n){
+    return (Math.round(n*100)/100).toString();
+  }
+
+  function updateGoal(current){
+    var goalGpaEl = document.getElementById("goalGpa");
+    var goalCreditsEl = document.getElementById("goalCredits");
+    var box = document.getElementById("goalResult");
+    var goalGpa = parseFloat(goalGpaEl.value);
+    var remainCredits = parseFloat(goalCreditsEl.value);
+
+    if(isNaN(goalGpa) || isNaN(remainCredits) || remainCredits <= 0){
+      box.className = "goal-result";
+      box.textContent = "목표 GPA와 남은 학점을 입력하면, 남은 과목에서 필요한 평균 평점을 계산해드려요.";
+      return;
+    }
+
+    var existingCredits = current.totalCredits;
+    var existingGpa = current.gpa;
+    var maxScale = parseFloat(currentScale);
+    var needed = (goalGpa * (existingCredits + remainCredits) - existingGpa * existingCredits) / remainCredits;
+
+    if(needed > maxScale){
+      box.className = "goal-result warn";
+      box.innerHTML = "현재 이수 내역으로는 남은 "+remainCredits+"학점을 만점("+maxScale.toFixed(1)+") 받아도 목표 달성이 어려워요. (필요 평점 <b>"+needed.toFixed(2)+"</b>)";
+    } else if(needed <= 0){
+      box.className = "goal-result";
+      box.innerHTML = "이미 목표 GPA를 달성했어요! 남은 과목은 F만 아니면 목표 유지가 가능해요.";
+    } else {
+      box.className = "goal-result";
+      box.innerHTML = "남은 "+remainCredits+"학점에서 평균 <b>"+needed.toFixed(2)+"점</b> 이상을 받으면 목표 GPA "+goalGpa.toFixed(2)+"에 도달할 수 있어요.";
+    }
+  }
+
+  function updateHsGoal(current){
+    var goalGradeEl = document.getElementById("hsGoalGrade");
+    var goalUnitsEl = document.getElementById("hsGoalUnits");
+    var box = document.getElementById("hsGoalResult");
+    var goalGrade = parseFloat(goalGradeEl.value);
+    var remainUnits = parseFloat(goalUnitsEl.value);
+
+    if(isNaN(goalGrade) || isNaN(remainUnits) || remainUnits <= 0){
+      box.className = "goal-result";
+      box.textContent = "목표 평균 등급과 남은 단위수를 입력하면, 남은 과목에서 필요한 평균 등급을 계산해드려요.";
+      return;
+    }
+
+    var existingUnits = current.totalUnits;
+    var existingAvg = current.average;
+    var needed = (goalGrade * (existingUnits + remainUnits) - existingAvg * existingUnits) / remainUnits;
+
+    if(needed < 1){
+      box.className = "goal-result warn";
+      box.innerHTML = "남은 "+remainUnits+"단위를 전부 1등급 받아도 목표 평균 등급 달성이 어려워요. (필요 평균 등급 <b>"+needed.toFixed(2)+"</b>)";
+    } else if(needed > 9){
+      box.className = "goal-result";
+      box.innerHTML = "이미 목표 평균 등급을 달성했어요! 남은 과목 성적에 크게 구애받지 않아도 목표를 유지할 수 있어요.";
+    } else {
+      box.className = "goal-result";
+      box.innerHTML = "남은 "+remainUnits+"단위에서 평균 <b>"+needed.toFixed(2)+"등급</b> 이내로 받으면 목표 평균 등급 "+goalGrade.toFixed(2)+"을 달성할 수 있어요.";
+    }
+  }
+
+
+  function setScaleButtons(){
+    scaleToggle.querySelectorAll("button").forEach(function(btn){
+      btn.classList.toggle("active", btn.dataset.scale === currentScale);
+    });
+  }
+
+  function setModeButtons(){
+    modeToggle.querySelectorAll("button").forEach(function(btn){
+      btn.classList.toggle("active", btn.dataset.mode === currentMode);
+    });
+    universitySection.style.display = currentMode === "university" ? "block" : "none";
+    highschoolSection.style.display = currentMode === "highschool" ? "block" : "none";
+  }
+
+  function refreshGradeOptions(){
+    rowsEl.querySelectorAll("tr").forEach(function(tr){
+      var select = tr.querySelector(".f-grade");
+      var current = select.value;
+      select.innerHTML = gradeOptions(SCALES[currentScale][current] != null ? current : "A0");
+    });
+  }
+
+  scaleToggle.addEventListener("click", function(e){
+    var btn = e.target.closest("button[data-scale]");
+    if(!btn) return;
+    currentScale = btn.dataset.scale;
+    setScaleButtons();
+    refreshGradeOptions();
+    renderUni();
+  });
+
+  modeToggle.addEventListener("click", function(e){
+    var btn = e.target.closest("button[data-mode]");
+    if(!btn) return;
+    currentMode = btn.dataset.mode;
+    setModeButtons();
+  });
+
+  document.getElementById("addRowBtn").addEventListener("click", function(){
+    createRow();
+    renderUni();
+  });
+
+  document.getElementById("hsAddRowBtn").addEventListener("click", function(){
+    createHsRow();
+    renderHs();
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", function(){
+    if(!confirm("입력한 모든 과목과 설정을 초기화할까요?")) return;
+    rowsEl.innerHTML = "";
+    currentScale = "4.5";
+    setScaleButtons();
+    document.getElementById("goalGpa").value = "";
+    document.getElementById("goalCredits").value = "";
+    createRow(); createRow(); createRow();
+    renderUni();
+  });
+
+  document.getElementById("hsResetBtn").addEventListener("click", function(){
+    if(!confirm("입력한 모든 과목과 설정을 초기화할까요?")) return;
+    hsRowsEl.innerHTML = "";
+    document.getElementById("hsGoalGrade").value = "";
+    document.getElementById("hsGoalUnits").value = "";
+    createHsRow(); createHsRow(); createHsRow();
+    renderHs();
+  });
+
+  document.getElementById("goalGpa").addEventListener("input", renderUni);
+  document.getElementById("goalCredits").addEventListener("input", renderUni);
+  document.getElementById("hsGoalGrade").addEventListener("input", renderHs);
+  document.getElementById("hsGoalUnits").addEventListener("input", renderHs);
+
+  // ── 성적표 이미지 자동 인식 (OCR) ──────────────────────────
+  // 완벽한 자동 인식이 아니라, 읽어서 미리 채워주고 사용자가 확인·수정하는 보조 기능입니다.
+  var UNI_GRADE_TOKENS = ["A+", "A0", "B+", "B0", "C+", "C0", "D+", "D0", "F"];
+
+  function setOcrStatus(el, text, cls){
+    el.textContent = text;
+    el.className = "ocr-status" + (cls ? " " + cls : "");
+  }
+
+  function extractNumbers(line){
+    var nums = [];
+    var re = /\d+(\.\d+)?/g, m;
+    while ((m = re.exec(line))) {
+      nums.push({ value: parseFloat(m[0]), index: m.index });
+    }
+    return nums;
+  }
+
+  function findUniGradeToken(line){
+    for (var i = 0; i < UNI_GRADE_TOKENS.length; i++) {
+      var idx = line.indexOf(UNI_GRADE_TOKENS[i]);
+      if (idx !== -1) return { token: UNI_GRADE_TOKENS[i], index: idx };
+    }
+    return null;
+  }
+
+  // 대학 학점표: 줄마다 등급 기호(A+, B0 ...)를 찾고, 그 근처에 있는
+  // 0~6 사이 숫자를 학점으로 추정한다.
+  function parseUniversityOcrText(text){
+    var lines = text.split("\n").map(function(l){ return l.trim(); }).filter(Boolean);
+    var rows = [];
+    lines.forEach(function(line){
+      var g = findUniGradeToken(line);
+      if (!g) return;
+      var masked = line.slice(0, g.index) + " ".repeat(g.token.length) + line.slice(g.index + g.token.length);
+      var nums = extractNumbers(masked).filter(function(n){ return n.value >= 0 && n.value <= 6; });
+      if (!nums.length) return;
+      nums.sort(function(a, b){ return Math.abs(a.index - g.index) - Math.abs(b.index - g.index); });
+      var credit = Math.round(nums[0].value * 2) / 2;
+      rows.push({ credit: credit, grade: g.token });
+    });
+    return rows;
+  }
+
+  // 고교 내신표: 등급(1~9 정수)으로 보이는 숫자를 줄의 뒤쪽에서 찾고,
+  // 그 앞에 있는 숫자를 단위수로 추정한다. 숫자가 2개 미만이면 건너뛴다.
+  function parseHighschoolOcrText(text){
+    var lines = text.split("\n").map(function(l){ return l.trim(); }).filter(Boolean);
+    var rows = [];
+    lines.forEach(function(line){
+      var nums = extractNumbers(line);
+      if (nums.length < 2) return;
+      var gradeCandidates = nums.filter(function(n){ return n.value >= 1 && n.value <= 9 && Number.isInteger(n.value); });
+      if (!gradeCandidates.length) return;
+      var gradeNum = gradeCandidates[gradeCandidates.length - 1];
+      var unitCandidates = nums.filter(function(n){ return n.index < gradeNum.index; });
+      if (!unitCandidates.length) return;
+      var unitNum = unitCandidates[unitCandidates.length - 1];
+      rows.push({ unit: unitNum.value, grade: String(gradeNum.value) });
+    });
+    return rows;
+  }
+
+  // 인식률을 높이기 위해 흑백 변환 + 대비 강화 후 OCR에 넘긴다.
+  function preprocessForOcr(file, callback){
+    var reader = new FileReader();
+    reader.onload = function(e){
+      var img = new Image();
+      img.onload = function(){
+        var canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        var ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0);
+        var imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        var d = imgData.data;
+        for (var i = 0; i < d.length; i += 4) {
+          var gray = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+          gray = Math.max(0, Math.min(255, (gray - 128) * 1.4 + 128));
+          d[i] = d[i + 1] = d[i + 2] = gray;
+        }
+        ctx.putImageData(imgData, 0, 0);
+        callback(canvas.toDataURL("image/png"));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function runOcr(file, statusEl, whitelist, parseFn, applyRow, renderFn){
+    if (typeof Tesseract === "undefined") {
+      setOcrStatus(statusEl, "이미지 인식 라이브러리를 불러오지 못했어요. 페이지를 새로고침한 뒤 다시 시도해주세요.", "error");
+      return;
+    }
+    setOcrStatus(statusEl, "이미지 분석 중… (처음 한 번은 시간이 좀 걸려요)");
+    preprocessForOcr(file, function(dataUrl){
+      Tesseract.createWorker("eng").then(function(worker){
+        worker.setParameters({ tessedit_char_whitelist: whitelist })
+          .then(function(){ return worker.recognize(dataUrl); })
+          .then(function(result){
+            worker.terminate();
+            var rows = parseFn(result.data.text);
+            if (!rows.length) {
+              setOcrStatus(statusEl, "표를 읽지 못했어요. 표 부분만 크게, 반듯하게 캡처해서 다시 시도해주세요.", "error");
+              return;
+            }
+            rows.forEach(applyRow);
+            renderFn();
+            setOcrStatus(statusEl, rows.length + "개 과목을 자동으로 채웠어요. 틀린 부분이 있는지 꼭 확인해주세요.", "done");
+          })
+          .catch(function(err){
+            worker.terminate();
+            setOcrStatus(statusEl, "이미지 분석 중 오류가 났어요: " + err.message, "error");
+          });
+      });
+    });
+  }
+
+  document.getElementById("ocrInput").addEventListener("change", function(e){
+    var file = e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    runOcr(file, document.getElementById("ocrStatus"), "0123456789ABCDF+.", parseUniversityOcrText, createRow, renderUni);
+  });
+
+  document.getElementById("hsOcrInput").addEventListener("change", function(e){
+    var file = e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    runOcr(file, document.getElementById("hsOcrStatus"), "0123456789", parseHighschoolOcrText, createHsRow, renderHs);
+  });
+
+  createRow(); createRow(); createRow();
+  createHsRow(); createHsRow(); createHsRow();
+  renderUni();
+  renderHs();
+})();
+</script>
+</body>
+</html>

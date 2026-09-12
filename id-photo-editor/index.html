@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2480597092657171" crossorigin="anonymous"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>증명사진 보정기 - 여권·이력서용 사진 자르기·보정 무료 도구 | 원서메이트</title>
+<meta name="description" content="사진관에서 찍은 사진을 여권용·증명사진·이력서용 규격에 맞게 자르고 밝기·대비·기울기·선명도를 보정하세요. 서버 업로드 없이 브라우저에서만 처리되는 무료 도구입니다.">
+<meta name="keywords" content="증명사진 보정, 증명사진 자르기, 여권사진 규격, 이력서 사진, 사진 밝기 보정">
+<link rel="canonical" href="https://wonseo-mate.netlify.app/id-photo-editor/">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:site_name" content="원서메이트">
+<meta property="og:url" content="https://wonseo-mate.netlify.app/id-photo-editor/">
+<meta property="og:title" content="증명사진 보정기 - 여권·이력서용 사진 자르기·보정 무료 도구">
+<meta property="og:description" content="사진을 여권용·증명사진·이력서용 규격에 맞게 자르고 밝기·대비·기울기·선명도를 무료로 보정하세요.">
+<meta property="og:image" content="https://wonseo-mate.netlify.app/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://wonseo-mate.netlify.app/og-image.png">
+<style>
+  :root{
+    --bg:#f5f6f8;
+    --card:#ffffff;
+    --border:#e2e4e9;
+    --text:#1c1f26;
+    --sub:#6b7280;
+    --accent:#3661f0;
+    --accent-light:#e8edff;
+    --danger:#e0483e;
+    --danger-light:#fdeceb;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Segoe UI",Roboto,sans-serif;
+    word-break:keep-all;
+    line-height:1.5;
+    padding:24px 16px 80px;
+  }
+  .wrap{
+    max-width:640px;
+    margin:0 auto;
+  }
+  .back-link{ display:inline-block; margin-bottom:12px; font-size:13px; color:var(--sub); text-decoration:none; }
+  .back-link:hover{ color:var(--accent); }
+  header{ margin-bottom:20px; }
+  h1{ font-size:22px; margin:0 0 6px; }
+  header p{ margin:0; color:var(--sub); font-size:14px; }
+  .refresh-warn{
+    display:flex;
+    gap:6px;
+    align-items:flex-start;
+    font-size:12px;
+    font-weight:600;
+    color:var(--danger);
+    background:var(--danger-light);
+    border-radius:10px;
+    padding:10px 14px;
+    margin-bottom:16px;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:18px;
+    margin-bottom:16px;
+  }
+  .card h2{ font-size:15px; margin:0 0 12px; }
+
+  #dropZone{
+    border:2px dashed var(--border);
+    border-radius:14px;
+    padding:40px 16px;
+    text-align:center;
+    color:var(--sub);
+    cursor:pointer;
+    background:var(--card);
+  }
+  #dropZone.dragover{
+    border-color:var(--accent);
+    background:var(--accent-light);
+    color:var(--accent);
+  }
+  #dropZone strong{ display:block; margin-bottom:6px; color:var(--text); font-size:15px; }
+  #fileInput{ display:none; }
+
+  #editorSection{ display:none; }
+  #editorSection.active{ display:block; }
+
+  .field-row{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:12px;
+  }
+  .field-row label{
+    flex:1;
+    min-width:140px;
+    font-size:13px;
+    color:var(--sub);
+  }
+  select, input[type="text"]{
+    width:100%;
+    margin-top:6px;
+    padding:9px 8px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    font-size:14px;
+    font-family:inherit;
+    background:#fff;
+    color:var(--text);
+  }
+
+  #stage{
+    position:relative;
+    overflow:hidden;
+    margin:0 auto 12px;
+    background:#333;
+    border-radius:10px;
+    touch-action:none;
+    cursor:grab;
+  }
+  #stage:active{ cursor:grabbing; }
+  #stageCanvas{
+    display:block;
+    width:100%;
+    height:100%;
+    touch-action:none;
+  }
+  #stageImg{ display:none; }
+  .stage-hint{
+    text-align:center;
+    font-size:12px;
+    color:var(--sub);
+    margin:-4px 0 14px;
+  }
+
+  .slider-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:12px;
+    font-size:13px;
+  }
+  .slider-row .slider-label{
+    width:74px;
+    color:var(--sub);
+    flex-shrink:0;
+  }
+  .slider-row input[type="range"]{
+    flex:1;
+  }
+  .slider-row .slider-value{
+    width:44px;
+    text-align:right;
+    font-variant-numeric:tabular-nums;
+    color:var(--text);
+    flex-shrink:0;
+  }
+  .btn{
+    padding:11px 16px;
+    border-radius:10px;
+    border:1px solid var(--border);
+    background:#fff;
+    color:var(--text);
+    font-size:14px;
+    cursor:pointer;
+    font-family:inherit;
+  }
+  .btn.primary{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#fff;
+    font-weight:600;
+  }
+  .btn.danger{
+    color:var(--danger);
+    border-color:var(--danger);
+    background:var(--danger-light);
+  }
+  .btn:disabled{
+    opacity:0.45;
+    cursor:not-allowed;
+  }
+  .btn-row{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .btn-row .btn{ flex:1; min-width:120px; }
+  .checkbox-line{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:13px;
+    color:var(--text);
+    margin-bottom:10px;
+  }
+  .checkbox-line input{ width:16px; height:16px; }
+
+  #outputPreviewWrap{
+    text-align:center;
+    margin-bottom:14px;
+  }
+  #outputPreview{
+    max-width:100%;
+    max-height:480px;
+    border-radius:8px;
+    border:1px solid var(--border);
+    background:#333;
+  }
+  .dim-note{
+    text-align:center;
+    font-size:12px;
+    color:var(--sub);
+    margin-top:6px;
+  }
+  .hint-text{
+    font-size:12px;
+    color:var(--sub);
+    margin:8px 0 0;
+  }
+  .orient-row{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-bottom:12px;
+  }
+  .orient-row .btn{
+    flex:1;
+    min-width:90px;
+    padding:9px 8px;
+    font-size:13px;
+  }
+  .site-footer{
+    max-width:640px;
+    margin:24px auto 0;
+    padding-top:16px;
+    border-top:1px solid var(--border);
+    font-size:12px;
+    color:var(--sub);
+    text-align:center;
+  }
+  .site-footer a{ color:var(--sub); }
+  #ad-slot{ margin-bottom:16px; }
+</style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "증명사진 보정기",
+  "url": "https://wonseo-mate.netlify.app/id-photo-editor/",
+  "applicationCategory": "UtilityApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "KRW" },
+  "description": "사진을 여권용·증명사진·이력서용 규격에 맞게 자르고 밝기·대비·기울기·선명도를 보정하는 무료 웹 도구",
+  "inLanguage": "ko"
+}
+</script>
+</head>
+<body>
+<div class="wrap">
+  <a href="../" class="back-link">← 첫 화면으로</a>
+  <header>
+    <h1>증명사진 보정기</h1>
+    <p>사진관에서 받은 사진을 원하는 규격으로 자르고 밝기·대비만 다듬어요. AI 처리 없이 모든 작업은 이 브라우저 안에서만 이뤄지고, 사진은 어디로도 전송되지 않아요.</p>
+  </header>
+
+  <div class="refresh-warn">⚠️ <span>이 사이트는 개인정보 보안을 위해 서버로 사진·내용을 보내지 않습니다. 새로고침하면 작업 중인 내용이 모두 사라지니 주의해주세요.</span></div>
+
+  <div class="card" id="uploadCard">
+    <div id="dropZone">
+      <strong>사진을 드래그하거나 클릭해서 업로드하세요</strong>
+      JPG, PNG 파일 지원
+    </div>
+    <input type="file" id="fileInput" accept="image/*">
+  </div>
+
+  <div id="editorSection">
+    <div class="btn-row" style="margin-bottom:16px;">
+      <button class="btn" id="undoBtn" type="button" disabled>↩ 되돌리기</button>
+      <button class="btn" id="resetMenuBtn" type="button">초기화</button>
+    </div>
+    <div class="card" id="resetPanel" hidden>
+      <h2>무엇을 초기화할까요?</h2>
+      <label class="checkbox-line"><input type="checkbox" id="resetAdjustCheck" checked> 보정값 (밝기·대비·채도·색상·선명도)</label>
+      <label class="checkbox-line"><input type="checkbox" id="resetZoomCheck" checked> 확대·위치</label>
+      <label class="checkbox-line"><input type="checkbox" id="resetTiltCheck" checked> 기울기</label>
+      <div class="btn-row">
+        <button class="btn primary" id="applyResetBtn" type="button">선택 항목 초기화</button>
+        <button class="btn" id="cancelResetBtn" type="button">취소</button>
+      </div>
+      <p class="hint-text">회전·반전처럼 사진에 직접 반영된 편집은 위 항목으로는 되돌릴 수 없어요. 그럴 땐 "되돌리기"를 누르거나, 아래에서 원본으로 되돌리세요.</p>
+      <div class="btn-row">
+        <button class="btn danger" id="revertOriginalBtn" type="button">원본 사진으로 되돌리기</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>규격 선택</h2>
+      <div class="field-row">
+        <label>사진 규격
+          <select id="presetSelect">
+            <option value="passport">여권용 (3.5 × 4.5cm)</option>
+            <option value="standard" selected>일반 증명사진 (3 × 4cm)</option>
+            <option value="resume">이력서용 (4 × 5cm)</option>
+            <option value="custom">직접 입력 (mm)</option>
+          </select>
+        </label>
+      </div>
+      <div class="field-row" id="customSizeRow" style="display:none;">
+        <label>가로(mm)
+          <input type="text" id="customW" inputmode="decimal" placeholder="예: 30">
+        </label>
+        <label>세로(mm)
+          <input type="text" id="customH" inputmode="decimal" placeholder="예: 40">
+        </label>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>자르기 &amp; 확대</h2>
+      <div id="stage">
+        <canvas id="stageCanvas"></canvas>
+        <img id="stageImg" alt="">
+      </div>
+      <div class="stage-hint">드래그해서 위치를 옮기고, 슬라이더로 확대/축소하세요</div>
+      <div class="slider-row">
+        <span class="slider-label">확대</span>
+        <input type="range" id="zoomRange" min="1" max="3" step="0.01" value="1">
+        <span class="slider-value" id="zoomValue">1.00x</span>
+      </div>
+      <div class="slider-row">
+        <span class="slider-label">기울기</span>
+        <input type="range" id="tiltRange" min="-15" max="15" step="0.5" value="0">
+        <span class="slider-value" id="tiltValue">0.0°</span>
+      </div>
+      <div class="orient-row">
+        <button class="btn" id="rotateLeftBtn" type="button">⟲ 왼쪽 회전</button>
+        <button class="btn" id="rotateRightBtn" type="button">⟳ 오른쪽 회전</button>
+        <button class="btn" id="flipHBtn" type="button">⇋ 좌우 반전</button>
+        <button class="btn" id="flipVBtn" type="button">⇕ 상하 반전</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>보정</h2>
+      <div class="slider-row">
+        <span class="slider-label">밝기</span>
+        <input type="range" id="brightnessRange" min="0" max="200" step="1" value="100">
+        <span class="slider-value" id="brightnessValue">100%</span>
+      </div>
+      <div class="slider-row">
+        <span class="slider-label">대비</span>
+        <input type="range" id="contrastRange" min="0" max="200" step="1" value="100">
+        <span class="slider-value" id="contrastValue">100%</span>
+      </div>
+      <div class="slider-row">
+        <span class="slider-label">채도</span>
+        <input type="range" id="saturateRange" min="0" max="200" step="1" value="100">
+        <span class="slider-value" id="saturateValue">100%</span>
+      </div>
+      <div class="slider-row">
+        <span class="slider-label">색상</span>
+        <input type="range" id="hueRange" min="-180" max="180" step="1" value="0">
+        <span class="slider-value" id="hueValue">0°</span>
+      </div>
+      <div class="slider-row">
+        <span class="slider-label">선명도</span>
+        <input type="range" id="sharpenRange" min="0" max="100" step="1" value="0">
+        <span class="slider-value" id="sharpenValue">0%</span>
+      </div>
+      <p class="hint-text">윤곽선·눈썹·머리카락 같은 경계 부분을 또렷하게 만드는 효과라 배경처럼 평평한 부분은 크게 안 바뀌어요 — 값을 70~100%까지 올려보면 차이가 잘 보여요.</p>
+      <div class="btn-row" style="margin-top:10px;">
+        <button class="btn" id="autoEnhanceBtn" type="button">자동 보정 적용</button>
+      </div>
+      <p class="hint-text">"자동 보정 적용"을 누르면 사진을 분석해서 위 밝기·대비 슬라이더가 알맞은 값으로 자동으로 움직여요. 조명이 흐릿하거나 뿌옇게 나온 사진에 효과적이고, 이미 선명한 사진은 슬라이더가 거의 그대로일 수 있어요. 마음에 안 들면 슬라이더를 다시 조절하거나 상단 "초기화"를 사용하세요.</p>
+    </div>
+
+    <div class="card">
+      <h2>미리보기 &amp; 다운로드</h2>
+      <div id="outputPreviewWrap">
+        <canvas id="outputPreview"></canvas>
+        <div class="dim-note" id="dimNote"></div>
+      </div>
+      <div class="field-row">
+        <label>파일 형식
+          <select id="formatSelect">
+            <option value="image/jpeg">JPG</option>
+            <option value="image/png">PNG</option>
+          </select>
+        </label>
+      </div>
+      <div class="btn-row">
+        <button class="btn" id="changePhotoBtn">다른 사진 선택</button>
+        <button class="btn primary" id="downloadBtn">다운로드</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <a href="../cover-letter/" style="text-decoration:none;color:inherit;display:block;">
+      <div style="font-weight:700;font-size:14px;color:var(--accent);">다음 단계 → 자소서 작성하기</div>
+      <div style="font-size:13px;color:var(--sub);margin-top:4px;">사진 보정이 끝났다면, 자소서도 표준 양식으로 작성해보세요.</div>
+    </a>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div id="ad-slot">
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-2480597092657171"
+         data-ad-slot="5546202613"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </div>
+  <a href="../">원서메이트</a> · © 2026 원서메이트. 무단 복제·재배포·재판매를 금지합니다.
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  var PRESETS = {
+    passport: { w: 35, h: 45 },
+    standard: { w: 30, h: 40 },
+    resume:   { w: 40, h: 50 }
+  };
+  var DPI = 300;
+
+  var dropZone = document.getElementById("dropZone");
+  var fileInput = document.getElementById("fileInput");
+  var editorSection = document.getElementById("editorSection");
+  var uploadCard = document.getElementById("uploadCard");
+  var stage = document.getElementById("stage");
+  var stageCanvas = document.getElementById("stageCanvas");
+  var stageImg = document.getElementById("stageImg");
+  var presetSelect = document.getElementById("presetSelect");
+  var customSizeRow = document.getElementById("customSizeRow");
+  var customW = document.getElementById("customW");
+  var customH = document.getElementById("customH");
+  var zoomRange = document.getElementById("zoomRange");
+  var zoomValue = document.getElementById("zoomValue");
+  var tiltRange = document.getElementById("tiltRange");
+  var tiltValue = document.getElementById("tiltValue");
+  var brightnessRange = document.getElementById("brightnessRange");
+  var contrastRange = document.getElementById("contrastRange");
+  var saturateRange = document.getElementById("saturateRange");
+  var hueRange = document.getElementById("hueRange");
+  var sharpenRange = document.getElementById("sharpenRange");
+  var brightnessValue = document.getElementById("brightnessValue");
+  var contrastValue = document.getElementById("contrastValue");
+  var saturateValue = document.getElementById("saturateValue");
+  var hueValue = document.getElementById("hueValue");
+  var sharpenValue = document.getElementById("sharpenValue");
+  var autoEnhanceBtn = document.getElementById("autoEnhanceBtn");
+  var outputPreview = document.getElementById("outputPreview");
+  var dimNote = document.getElementById("dimNote");
+  var formatSelect = document.getElementById("formatSelect");
+  var downloadBtn = document.getElementById("downloadBtn");
+  var changePhotoBtn = document.getElementById("changePhotoBtn");
+  var rotateLeftBtn = document.getElementById("rotateLeftBtn");
+  var rotateRightBtn = document.getElementById("rotateRightBtn");
+  var flipHBtn = document.getElementById("flipHBtn");
+  var flipVBtn = document.getElementById("flipVBtn");
+  var undoBtn = document.getElementById("undoBtn");
+  var resetMenuBtn = document.getElementById("resetMenuBtn");
+  var resetPanel = document.getElementById("resetPanel");
+  var resetAdjustCheck = document.getElementById("resetAdjustCheck");
+  var resetZoomCheck = document.getElementById("resetZoomCheck");
+  var resetTiltCheck = document.getElementById("resetTiltCheck");
+  var applyResetBtn = document.getElementById("applyResetBtn");
+  var cancelResetBtn = document.getElementById("cancelResetBtn");
+  var revertOriginalBtn = document.getElementById("revertOriginalBtn");
+
+  var naturalW = 0, naturalH = 0;
+  var fitScale = 1, zoom = 1;
+  var offsetX = 0, offsetY = 0;
+  var stageW = 320, stageH = 320;
+  var dragging = false, dragStartX = 0, dragStartY = 0, dragOrigX = 0, dragOrigY = 0;
+  var history = [];
+  var originalSnapshot = null;
+
+  function mmToPx(mm){ return Math.round(mm / 25.4 * DPI); }
+
+  function currentTargetMm(){
+    if(presetSelect.value === "custom"){
+      var w = parseFloat(customW.value);
+      var h = parseFloat(customH.value);
+      if(!(w > 0) || !(h > 0)) return null;
+      return { w: w, h: h };
+    }
+    return PRESETS[presetSelect.value];
+  }
+
+  function updateStageSize(){
+    var mm = currentTargetMm();
+    if(!mm) return;
+    var ratio = mm.w / mm.h;
+    var maxH = Math.min(360, window.innerWidth - 80);
+    stageH = maxH;
+    stageW = Math.round(stageH * ratio);
+    stage.style.width = stageW + "px";
+    stage.style.height = stageH + "px";
+    if(naturalW) fitImageToStage(true);
+  }
+
+  function fitImageToStage(keepZoom){
+    if(!naturalW) return;
+    fitScale = Math.max(stageW / naturalW, stageH / naturalH);
+    if(!keepZoom) zoom = 1;
+    zoomRange.value = zoom;
+    zoomValue.textContent = zoom.toFixed(2) + "x";
+    offsetX = (stageW - naturalW * fitScale * zoom) / 2;
+    offsetY = (stageH - naturalH * fitScale * zoom) / 2;
+    renderOutput();
+  }
+
+  function snapshotState(){
+    return {
+      src: stageImg.src,
+      naturalW: naturalW,
+      naturalH: naturalH,
+      zoom: zoom,
+      offsetX: offsetX,
+      offsetY: offsetY,
+      tilt: tiltRange.value,
+      brightness: brightnessRange.value,
+      contrast: contrastRange.value,
+      saturate: saturateRange.value,
+      hue: hueRange.value,
+      sharpen: sharpenRange.value
+    };
+  }
+
+  function pushHistory(){
+    history.push(snapshotState());
+    if(history.length > 15) history.shift();
+    updateUndoButton();
+  }
+
+  function updateUndoButton(){
+    undoBtn.disabled = history.length === 0;
+  }
+
+  function restoreSnapshot(snap){
+    naturalW = snap.naturalW;
+    naturalH = snap.naturalH;
+    zoom = snap.zoom;
+    offsetX = snap.offsetX;
+    offsetY = snap.offsetY;
+    tiltRange.value = snap.tilt;
+    tiltValue.textContent = parseFloat(snap.tilt).toFixed(1) + "°";
+    brightnessRange.value = snap.brightness; brightnessValue.textContent = snap.brightness + "%";
+    contrastRange.value = snap.contrast; contrastValue.textContent = snap.contrast + "%";
+    saturateRange.value = snap.saturate; saturateValue.textContent = snap.saturate + "%";
+    hueRange.value = snap.hue; hueValue.textContent = snap.hue + "°";
+    sharpenRange.value = snap.sharpen; sharpenValue.textContent = snap.sharpen + "%";
+    zoomRange.value = zoom; zoomValue.textContent = zoom.toFixed(2) + "x";
+
+    var img = new Image();
+    img.onload = function(){
+      stageImg.src = snap.src;
+      renderOutput();
+    };
+    img.src = snap.src;
+  }
+
+  function undo(){
+    if(history.length === 0) return;
+    var snap = history.pop();
+    restoreSnapshot(snap);
+    updateUndoButton();
+  }
+
+  function transformStageImage(draw, newW, newH){
+    if(!naturalW) return;
+    var canvas = document.createElement("canvas");
+    canvas.width = newW;
+    canvas.height = newH;
+    var ctx = canvas.getContext("2d");
+    draw(ctx, newW, newH);
+    var dataUrl = canvas.toDataURL("image/png");
+    var img = new Image();
+    img.onload = function(){
+      stageImg.src = dataUrl;
+      naturalW = newW;
+      naturalH = newH;
+      fitImageToStage(false);
+    };
+    img.src = dataUrl;
+  }
+
+  function rotateStage(deg){
+    var w = naturalW, h = naturalH;
+    transformStageImage(function(ctx, newW, newH){
+      ctx.translate(newW / 2, newH / 2);
+      ctx.rotate(deg * Math.PI / 180);
+      ctx.drawImage(stageImg, -w / 2, -h / 2, w, h);
+    }, naturalH, naturalW);
+  }
+
+  function flipStage(axis){
+    var w = naturalW, h = naturalH;
+    transformStageImage(function(ctx, newW, newH){
+      ctx.translate(newW / 2, newH / 2);
+      ctx.scale(axis === "h" ? -1 : 1, axis === "v" ? -1 : 1);
+      ctx.drawImage(stageImg, -w / 2, -h / 2, w, h);
+    }, naturalW, naturalH);
+  }
+
+  function clampOffsets(){
+    var scale = fitScale * zoom;
+    var dispW = naturalW * scale;
+    var dispH = naturalH * scale;
+    var minX = stageW - dispW;
+    var minY = stageH - dispH;
+    offsetX = Math.min(0, Math.max(minX, offsetX));
+    offsetY = Math.min(0, Math.max(minY, offsetY));
+  }
+
+  function loadFile(file){
+    if(!file || file.type.indexOf("image/") !== 0){
+      alert("이미지 파일만 업로드할 수 있어요.");
+      return;
+    }
+    var reader = new FileReader();
+    reader.onload = function(e){
+      var img = new Image();
+      img.onload = function(){
+        naturalW = img.naturalWidth;
+        naturalH = img.naturalHeight;
+        stageImg.src = e.target.result;
+        uploadCard.style.display = "none";
+        editorSection.classList.add("active");
+        updateStageSize();
+        fitImageToStage(false);
+        history = [];
+        updateUndoButton();
+        originalSnapshot = snapshotState();
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  dropZone.addEventListener("click", function(){ fileInput.click(); });
+  fileInput.addEventListener("change", function(e){
+    if(e.target.files && e.target.files[0]) loadFile(e.target.files[0]);
+  });
+  ["dragenter","dragover"].forEach(function(evt){
+    dropZone.addEventListener(evt, function(e){
+      e.preventDefault();
+      dropZone.classList.add("dragover");
+    });
+  });
+  ["dragleave","drop"].forEach(function(evt){
+    dropZone.addEventListener(evt, function(e){
+      e.preventDefault();
+      dropZone.classList.remove("dragover");
+    });
+  });
+  dropZone.addEventListener("drop", function(e){
+    var file = e.dataTransfer.files && e.dataTransfer.files[0];
+    if(file) loadFile(file);
+  });
+
+  presetSelect.addEventListener("change", function(){
+    customSizeRow.style.display = presetSelect.value === "custom" ? "flex" : "none";
+    updateStageSize();
+    renderOutput();
+  });
+  customW.addEventListener("input", function(){ updateStageSize(); renderOutput(); });
+  customH.addEventListener("input", function(){ updateStageSize(); renderOutput(); });
+
+  zoomRange.addEventListener("pointerdown", function(){ if(naturalW) pushHistory(); });
+  zoomRange.addEventListener("input", function(){
+    zoom = parseFloat(zoomRange.value);
+    zoomValue.textContent = zoom.toFixed(2) + "x";
+    clampOffsets();
+    renderOutput();
+  });
+
+  tiltRange.addEventListener("pointerdown", function(){ if(naturalW) pushHistory(); });
+  tiltRange.addEventListener("input", function(){
+    tiltValue.textContent = parseFloat(tiltRange.value).toFixed(1) + "°";
+    renderOutput();
+  });
+
+  stage.addEventListener("pointerdown", function(e){
+    if(!naturalW) return;
+    pushHistory();
+    dragging = true;
+    stage.setPointerCapture(e.pointerId);
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
+    dragOrigX = offsetX;
+    dragOrigY = offsetY;
+  });
+  stage.addEventListener("pointermove", function(e){
+    if(!dragging) return;
+    offsetX = dragOrigX + (e.clientX - dragStartX);
+    offsetY = dragOrigY + (e.clientY - dragStartY);
+    clampOffsets();
+    renderOutput();
+  });
+  function endDrag(){
+    if(dragging){ dragging = false; renderOutput(); }
+  }
+  stage.addEventListener("pointerup", endDrag);
+  stage.addEventListener("pointercancel", endDrag);
+
+  function bindSlider(range, valueEl, suffix){
+    range.addEventListener("pointerdown", function(){ if(naturalW) pushHistory(); });
+    range.addEventListener("input", function(){
+      valueEl.textContent = range.value + suffix;
+      renderOutput();
+    });
+  }
+  bindSlider(brightnessRange, brightnessValue, "%");
+  bindSlider(contrastRange, contrastValue, "%");
+  bindSlider(saturateRange, saturateValue, "%");
+  bindSlider(hueRange, hueValue, "°");
+
+  sharpenRange.addEventListener("pointerdown", function(){ if(naturalW) pushHistory(); });
+  sharpenRange.addEventListener("input", function(){
+    sharpenValue.textContent = sharpenRange.value + "%";
+    renderOutput();
+  });
+
+  autoEnhanceBtn.addEventListener("click", function(){
+    if(!naturalW) return;
+    var canvas = document.createElement("canvas");
+    canvas.width = naturalW;
+    canvas.height = naturalH;
+    var ctx = canvas.getContext("2d");
+    ctx.drawImage(stageImg, 0, 0, naturalW, naturalH);
+    var imgData = ctx.getImageData(0, 0, naturalW, naturalH);
+    var d = imgData.data;
+    var hist = new Array(256).fill(0);
+    var total = 0;
+    for(var i = 0; i < d.length; i += 4){
+      var lum = Math.round(0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2]);
+      hist[lum]++;
+      total++;
+    }
+    var clip = total * 0.01;
+    var low = 0, accLow = 0;
+    while(low < 255 && accLow < clip){ accLow += hist[low]; low++; }
+    var high = 255, accHigh = 0;
+    while(high > 0 && accHigh < clip){ accHigh += hist[high]; high--; }
+    if(high - low < 10){
+      alert("이 사진은 이미 명암 대비가 충분해서 자동 보정으로 크게 달라지지 않아요.");
+      return;
+    }
+
+    var s = 255 / (high - low);
+    var cf = 1 + (low * s) / 128;
+    var bf = s / cf;
+    cf = Math.min(2, Math.max(0.6, cf));
+    bf = Math.min(2, Math.max(0.6, bf));
+
+    pushHistory();
+    brightnessRange.value = Math.round(bf * 100);
+    brightnessValue.textContent = brightnessRange.value + "%";
+    contrastRange.value = Math.round(cf * 100);
+    contrastValue.textContent = contrastRange.value + "%";
+    renderOutput();
+  });
+
+  rotateLeftBtn.addEventListener("click", function(){ if(naturalW){ pushHistory(); rotateStage(-90); } });
+  rotateRightBtn.addEventListener("click", function(){ if(naturalW){ pushHistory(); rotateStage(90); } });
+  flipHBtn.addEventListener("click", function(){ if(naturalW){ pushHistory(); flipStage("h"); } });
+  flipVBtn.addEventListener("click", function(){ if(naturalW){ pushHistory(); flipStage("v"); } });
+
+  undoBtn.addEventListener("click", function(){ undo(); });
+
+  resetMenuBtn.addEventListener("click", function(){
+    resetPanel.hidden = !resetPanel.hidden;
+  });
+  cancelResetBtn.addEventListener("click", function(){
+    resetPanel.hidden = true;
+  });
+
+  applyResetBtn.addEventListener("click", function(){
+    if(!naturalW) return;
+    pushHistory();
+    if(resetAdjustCheck.checked){
+      brightnessRange.value = 100; brightnessValue.textContent = "100%";
+      contrastRange.value = 100; contrastValue.textContent = "100%";
+      saturateRange.value = 100; saturateValue.textContent = "100%";
+      hueRange.value = 0; hueValue.textContent = "0°";
+      sharpenRange.value = 0; sharpenValue.textContent = "0%";
+    }
+    if(resetTiltCheck.checked){
+      tiltRange.value = 0; tiltValue.textContent = "0.0°";
+    }
+    if(resetZoomCheck.checked){
+      fitImageToStage(false);
+    }
+    renderOutput();
+    resetPanel.hidden = true;
+  });
+
+  revertOriginalBtn.addEventListener("click", function(){
+    if(!naturalW || !originalSnapshot) return;
+    if(!confirm("정말 원본 사진으로 되돌릴까요? 지금까지의 모든 편집(회전·반전 포함)이 취소됩니다.")) return;
+    pushHistory();
+    restoreSnapshot(originalSnapshot);
+    resetPanel.hidden = true;
+  });
+
+  changePhotoBtn.addEventListener("click", function(){
+    naturalW = 0; naturalH = 0;
+    stageImg.src = "";
+    fileInput.value = "";
+    editorSection.classList.remove("active");
+    uploadCard.style.display = "block";
+    history = [];
+    originalSnapshot = null;
+    updateUndoButton();
+    resetPanel.hidden = true;
+    stageCanvas.getContext("2d").clearRect(0, 0, stageCanvas.width, stageCanvas.height);
+  });
+
+  function clamp255(v){ return v < 0 ? 0 : (v > 255 ? 255 : v); }
+
+  function applySharpen(ctx, w, h, amount){
+    if(!(amount > 0)) return;
+    var imgData = ctx.getImageData(0, 0, w, h);
+    var src = imgData.data;
+    var out = new Uint8ClampedArray(src);
+    var idx = function(x, y){ return (y * w + x) * 4; };
+    for(var y = 1; y < h - 1; y++){
+      for(var x = 1; x < w - 1; x++){
+        var i = idx(x, y);
+        for(var c = 0; c < 3; c++){
+          var center = src[i + c];
+          var up = src[idx(x, y - 1) + c];
+          var down = src[idx(x, y + 1) + c];
+          var left = src[idx(x - 1, y) + c];
+          var right = src[idx(x + 1, y) + c];
+          out[i + c] = clamp255(center * (1 + 4 * amount) - amount * (up + down + left + right));
+        }
+      }
+    }
+    imgData.data.set(out);
+    ctx.putImageData(imgData, 0, 0);
+  }
+
+  function rgbToHsl(r, g, b){
+    r /= 255; g /= 255; b /= 255;
+    var max = Math.max(r, g, b), min = Math.min(r, g, b);
+    var h, s, l = (max + min) / 2;
+    if(max === min){
+      h = s = 0;
+    } else {
+      var d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch(max){
+        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+        case g: h = (b - r) / d + 2; break;
+        default: h = (r - g) / d + 4; break;
+      }
+      h /= 6;
+    }
+    return [h, s, l];
+  }
+
+  function hslToRgb(h, s, l){
+    if(s === 0){
+      var v = Math.round(l * 255);
+      return [v, v, v];
+    }
+    var hue2rgb = function(p, q, t){
+      if(t < 0) t += 1;
+      if(t > 1) t -= 1;
+      if(t < 1/6) return p + (q - p) * 6 * t;
+      if(t < 1/2) return q;
+      if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+      return p;
+    };
+    var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    var p = 2 * l - q;
+    return [
+      Math.round(hue2rgb(p, q, h + 1/3) * 255),
+      Math.round(hue2rgb(p, q, h) * 255),
+      Math.round(hue2rgb(p, q, h - 1/3) * 255)
+    ];
+  }
+
+  function applyAdjustments(ctx, w, h){
+    var brightnessFactor = parseFloat(brightnessRange.value) / 100;
+    var contrastFactor = parseFloat(contrastRange.value) / 100;
+    var saturateFactor = parseFloat(saturateRange.value) / 100;
+    var hueShift = parseFloat(hueRange.value) / 360;
+
+    var imgData = ctx.getImageData(0, 0, w, h);
+    var d = imgData.data;
+    for(var i = 0; i < d.length; i += 4){
+      var r = d[i], g = d[i+1], b = d[i+2];
+
+      r *= brightnessFactor; g *= brightnessFactor; b *= brightnessFactor;
+      r = (r - 128) * contrastFactor + 128;
+      g = (g - 128) * contrastFactor + 128;
+      b = (b - 128) * contrastFactor + 128;
+      r = clamp255(r); g = clamp255(g); b = clamp255(b);
+
+      if(saturateFactor !== 1 || hueShift !== 0){
+        var hsl = rgbToHsl(r, g, b);
+        hsl[0] = ((hsl[0] + hueShift) % 1 + 1) % 1;
+        hsl[1] = Math.min(1, Math.max(0, hsl[1] * saturateFactor));
+        var rgb = hslToRgb(hsl[0], hsl[1], hsl[2]);
+        r = rgb[0]; g = rgb[1]; b = rgb[2];
+      }
+
+      d[i] = r; d[i+1] = g; d[i+2] = b;
+    }
+    ctx.putImageData(imgData, 0, 0);
+  }
+
+  function renderPhotoTo(ctx, boxW, boxH){
+    var tiny = document.createElement("canvas");
+    tiny.width = 20;
+    tiny.height = 20;
+    tiny.getContext("2d").drawImage(stageImg, 0, 0, naturalW, naturalH, 0, 0, 20, 20);
+    ctx.drawImage(tiny, 0, 0, boxW, boxH);
+
+    var scale = fitScale * zoom;
+    var tiltDeg = parseFloat(tiltRange.value) || 0;
+    var k = boxW / stageW;
+    var cx = stageW / 2, cy = stageH / 2;
+
+    ctx.save();
+    ctx.scale(k, k);
+    ctx.translate(cx, cy);
+    ctx.rotate(tiltDeg * Math.PI / 180);
+    ctx.translate(-cx, -cy);
+    ctx.translate(offsetX, offsetY);
+    ctx.scale(scale, scale);
+    ctx.drawImage(stageImg, 0, 0, naturalW, naturalH);
+    ctx.restore();
+
+    applyAdjustments(ctx, boxW, boxH);
+    applySharpen(ctx, boxW, boxH, parseFloat(sharpenRange.value) / 100 * 3);
+  }
+
+  function renderStageCanvas(){
+    stageCanvas.width = stageW;
+    stageCanvas.height = stageH;
+    renderPhotoTo(stageCanvas.getContext("2d"), stageW, stageH);
+  }
+
+  var renderPending = false;
+  function renderOutput(){
+    if(renderPending) return;
+    renderPending = true;
+    requestAnimationFrame(function(){
+      renderPending = false;
+      if(!naturalW) return;
+      renderStageCanvas();
+      doRenderOutput();
+    });
+  }
+
+  function doRenderOutput(){
+    var mm = currentTargetMm();
+    if(!mm) return;
+    var outW = mmToPx(mm.w);
+    var outH = mmToPx(mm.h);
+    outputPreview.width = outW;
+    outputPreview.height = outH;
+    renderPhotoTo(outputPreview.getContext("2d"), outW, outH);
+    dimNote.textContent = outW + " × " + outH + "px (300dpi 기준 " + mm.w + "×" + mm.h + "mm)";
+  }
+
+  downloadBtn.addEventListener("click", function(){
+    if(!naturalW) return;
+    var format = formatSelect.value;
+    var ext = format === "image/png" ? "png" : "jpg";
+    var mm = currentTargetMm();
+    var outW = outputPreview.width, outH = outputPreview.height;
+    var dataUrl = outputPreview.toDataURL(format, 0.92);
+    var a = document.createElement("a");
+    a.href = dataUrl;
+    a.download = "증명사진_" + outW + "x" + outH + "." + ext;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  });
+
+  window.addEventListener("resize", function(){
+    if(naturalW){
+      updateStageSize();
+      clampOffsets();
+      renderOutput();
+    }
+  });
+})();
+</script>
+</body>
+</html>

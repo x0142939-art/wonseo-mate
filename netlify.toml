@@ -1,0 +1,12 @@
+[build]
+  publish = "."
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+[functions.spellcheck]
+  # dictionary-ko는 require.resolve()로 동적 경로를 찾아 .aff/.dic를 직접 읽기 때문에
+  # esbuild가 정적으로 추적하지 못함. external로 지정해야 패키지 전체(데이터 파일 포함)가
+  # node_modules에 그대로 담겨 배포됨 (zip-it-and-ship-it으로 직접 확인함).
+  external_node_modules = ["dictionary-ko"]
